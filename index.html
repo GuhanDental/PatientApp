@@ -1,3 +1,4 @@
+<!-- This starts your full index.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -88,7 +89,10 @@
     <table class="search-table">
       <tr>
         <td><input type="text" id="searchInput" placeholder="Search by Patient ID, Name or Phone" style="width:100%;"></td>
-        <td style="width:100px;"><button onclick="searchPatient()">Search</button></td>
+        <td style="width:200px;">
+          <button onclick="searchPatient()">Search</button>
+          <button type="button" onclick="resetSearch()">Reset</button>
+        </td>
       </tr>
     </table>
     <div id="searchResults" style="margin-top: 20px;"></div>
@@ -99,7 +103,7 @@
   </div>
 
   <script>
-    const scriptUrl = '/.netlify/functions/submit-patient';
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbzrtMg1mJSK5QHPPFAKWvYvzd38NEqsHXQEi-4QH2qLPYLvUNennShAAIBWI44heWnsWA/exec';
     const spinner = document.getElementById('spinner');
     const form = document.getElementById('patientForm');
 
@@ -121,8 +125,10 @@
       })
       .then(res => res.json())
       .then(res => {
+        const pid = res.patientId || res.patientID || res.id;
         if (res.status === "Success") {
-          alert("Record saved! Patient ID: " + res.patientId);
+          alert("Record saved! Patient ID: " + pid);
+          document.getElementById('patientId').value = pid;
           resetForm();
         } else {
           alert("Error: " + res.message);
@@ -135,6 +141,11 @@
     function resetForm() {
       form.reset();
       document.getElementById('patientId').value = '';
+    }
+
+    function resetSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchResults').innerHTML = '';
     }
 
     function searchPatient() {
@@ -181,7 +192,7 @@
           <td>${item.gender}</td>
           <td>${item.description}</td>
           <td>${item.timestamp}</td>
-          <td>${item.consultationpaid ? "Yes" : "No"}</td>
+          <td>${item.consultationPaid ? "Yes" : "No"}</td>
         `;
         tbody.appendChild(row);
       });
