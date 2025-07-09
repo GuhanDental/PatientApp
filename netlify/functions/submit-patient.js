@@ -1,5 +1,5 @@
 export async function handler(event) {
-  const googleScriptURL = "https://script.google.com/macros/s/AKfycbyUGDmKjg-TCLC7jQK1dDKHoNP-qbYK0_qWKq5XaAf6uDc4xthQHx2-wVFNGwLphBY9lQ/exec";
+  const googleScriptURL = "https://script.google.com/macros/s/AKfycbwH_I_RNmeNQOv1ZDTa5y2vZpL1vKW2JoxHRWgEoo7JuPo2EbmqUiUOAfDA4KgMuKeiHQ/exec";
 
   if (event.httpMethod === "OPTIONS") {
     return {
