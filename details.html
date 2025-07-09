@@ -1,38 +1,73 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Patient Details</title>
+  <title>Patient Details - Guhan Dental</title>
+  <script src="auth.js"></script>
+  <script>requireLogin();</script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    h2 { text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    td, th { border: 1px solid #ccc; padding: 8px; }
-    th { background-color: #f9f9f9; text-align: left; }
-    .spinner {
-      display: none; position: fixed; top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(255,255,255,0.7);
-      justify-content: center; align-items: center; z-index: 9999;
+    body {
+      font-family: Arial;
+      text-align: center;
+      padding: 20px;
     }
     .logo {
-      margin: 20px;
+      margin-bottom: 20px;
+    }
+    .form-container {
+      max-width: 600px;
+      margin: auto;
+      text-align: left;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td {
+      padding: 8px;
+      border: 1px solid #ccc;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 6px;
+      box-sizing: border-box;
+    }
+    .spinner {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(255,255,255,0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
     }
     .spinner img {
-      width: 60px; animation: spin 1s linear infinite;
+      width: 60px;
+      animation: spin 1s linear infinite;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    #saveBtn {
+      margin-top: 20px;
+      display: none;
+    }
   </style>
 </head>
 <body>
-   <div class="logo">
+  <div class="logo">
     <img src="Guhan-dental-clinic-logo.png" alt="Clinic Logo" width="120">
   </div>
-  <h2>Patient Details</h2>
-  <div id="detailsContainer"></div>
+
+  <div class="form-container">
+    <h2>Patient Details</h2>
+    <form id="detailsForm">
+      <table id="detailsTable"></table>
+      <button id="saveBtn" type="submit">Save</button>
+    </form>
+  </div>
 
   <div class="spinner" id="spinner">
     <img src="tooth-spinner.png" alt="Loading..." />
@@ -41,57 +76,110 @@
   <script>
     const scriptUrl = "/.netlify/functions/submit-patient";
     const spinner = document.getElementById("spinner");
-    const container = document.getElementById("detailsContainer");
+    const table = document.getElementById("detailsTable");
+    const form = document.getElementById("detailsForm");
+    const saveBtn = document.getElementById("saveBtn");
+    const patientId = new URLSearchParams(window.location.search).get("patientId");
+    const email = getUserEmail();
+    const isAdminUser = isAdmin();
+    const isAssistantUser = isAssistant();
 
-    const params = new URLSearchParams(window.location.search);
-    const patientId = params.get("patientId");
+    const editableFields = {
+      consultationFees: "Consultation Fees Paid",
+      totalPaymentCharges: "Total Payment Charges",
+      advancePaid: "Advance Paid",
+      pendingPayment: "Pending Payment"
+    };
 
-    if (!patientId) {
-      container.innerHTML = "<p>Invalid Patient ID</p>";
-    } else {
-      spinner.style.display = "flex";
+    let formData = {};
+
+    window.onload = () => {
+      if (!patientId) {
+        alert("No patient ID provided.");
+        return;
+      }
+
+      spinner.style.display = 'flex';
       fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}`)
         .then(res => res.json())
         .then(data => {
           if (data.status === "Error") {
-            container.innerHTML = `<p>${data.message}</p>`;
+            alert(data.message);
             return;
           }
 
-          const table = document.createElement("table");
-          const tbody = document.createElement("tbody");
-
+          formData = data;
           for (let key in data) {
-            if (key === "userEmail" || key === "patientId") continue;
+            const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
+            if (key === "patientId" || key === "userEmail") continue;
 
-            if (
-              ["totalPaymentCharges", "advancePaid", "pendingPayment"].includes(key) &&
-              data.userEmail !== "guhandental@gmail.com"
-            ) {
+            let inputEl;
+
+            if (editableFields.hasOwnProperty(key) && isAdminUser) {
+              if (typeof data[key] === "boolean") {
+                inputEl = document.createElement("input");
+                inputEl.type = "checkbox";
+                inputEl.name = key;
+                inputEl.checked = data[key];
+              } else {
+                inputEl = document.createElement("input");
+                inputEl.type = "text";
+                inputEl.name = key;
+                inputEl.value = data[key];
+              }
+            } else if (editableFields.hasOwnProperty(key)) {
+              // field is sensitive but user is not admin — skip rendering
               continue;
+            } else {
+              inputEl = document.createElement("span");
+              inputEl.innerText = data[key];
             }
 
             const row = document.createElement("tr");
-            row.innerHTML = `
-              <th>${formatLabel(key)}</th>
-              <td>${data[key]}</td>
-            `;
-            tbody.appendChild(row);
+            const cell1 = document.createElement("td");
+            const cell2 = document.createElement("td");
+            cell1.innerText = label;
+            cell2.appendChild(inputEl);
+            row.appendChild(cell1);
+            row.appendChild(cell2);
+            table.appendChild(row);
           }
 
-          table.appendChild(tbody);
-          container.innerHTML = "";
-          container.appendChild(table);
+          if (isAdminUser) {
+            saveBtn.style.display = "inline-block";
+          }
         })
-        .catch(() => container.innerHTML = "<p>Failed to load patient details.</p>")
-        .finally(() => spinner.style.display = "none");
-    }
+        .catch(() => alert("Failed to load patient details."))
+        .finally(() => spinner.style.display = 'none');
+    };
 
-    function formatLabel(label) {
-      return label
-        .replace(/([A-Z])/g, ' $1')
-        .replace(/^./, str => str.toUpperCase());
-    }
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      spinner.style.display = "flex";
+
+      const updatedData = { patientId };
+      [...form.elements].forEach(el => {
+        if (el.name) {
+          updatedData[el.name] = el.type === "checkbox" ? el.checked : el.value.trim();
+        }
+      });
+
+      fetch(scriptUrl, {
+        method: "POST",
+        body: JSON.stringify(updatedData),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "Success") {
+          alert("Record updated!");
+        } else {
+          alert("Error: " + res.message);
+        }
+      })
+      .catch(() => alert("Failed to update patient record."))
+      .finally(() => spinner.style.display = "none");
+    });
   </script>
 </body>
 </html>
