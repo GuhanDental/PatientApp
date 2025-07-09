@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -80,9 +79,6 @@
     const form = document.getElementById("detailsForm");
     const saveBtn = document.getElementById("saveBtn");
     const patientId = new URLSearchParams(window.location.search).get("patientId");
-    const email = getUserEmail();
-    const isAdminUser = isAdmin();
-    const isAssistantUser = isAssistant();
 
     const editableFields = {
       consultationFees: "Consultation Fees Paid",
@@ -93,60 +89,94 @@
 
     let formData = {};
 
-window.onload = () => {
-  const email = getUserEmail();
-  const isAdminUser = isAdmin();
+    window.onload = () => {
+      const email = getUserEmail();
+      const isAdminUser = isAdmin();
+      const isAssistantUser = isAssistant();
 
-  console.log("Logged in as:", email);
-  console.log("Is Admin?", isAdminUser);
-
-  const editableFields = {
-    consultationFees: "Consultation Fees Paid",
-    totalPaymentCharges: "Total Payment Charges",
-    advancePaid: "Advance Paid",
-    pendingPayment: "Pending Payment"
-  };
-
-  spinner.style.display = 'flex';
-  fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}&userEmail=${encodeURIComponent(email)}`)
-    .then(res => res.json())
-    .then(data => {
-      for (let key in data) {
-        if (key === "patientId" || key === "userEmail") continue;
-
-        const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
-        const row = document.createElement("tr");
-        const cell1 = document.createElement("td");
-        const cell2 = document.createElement("td");
-
-        if (editableFields.hasOwnProperty(key)) {
-          if (isAdminUser) {
-            const input = document.createElement("input");
-            input.name = key;
-            input.type = typeof data[key] === "boolean" ? "checkbox" : "text";
-            if (input.type === "checkbox") input.checked = data[key];
-            else input.value = data[key];
-            cell2.appendChild(input);
-          } else {
-            continue; // hide for assistant
-          }
-        } else {
-          const span = document.createElement("span");
-          span.innerText = data[key];
-          cell2.appendChild(span);
-        }
-
-        cell1.innerText = label;
-        row.appendChild(cell1);
-        row.appendChild(cell2);
-        table.appendChild(row);
+      if (!patientId) {
+        alert("No patient ID provided.");
+        return;
       }
 
-      if (isAdminUser) saveBtn.style.display = "inline-block";
-    })
-    .catch(() => alert("Failed to load patient details."))
-    .finally(() => spinner.style.display = "none");
-};
+      spinner.style.display = 'flex';
+
+      fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}&userEmail=${encodeURIComponent(email)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "Error") {
+            alert(data.message);
+            return;
+          }
+
+          formData = data;
+
+          for (let key in data) {
+            if (key === "patientId" || key === "userEmail") continue;
+
+            const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
+            const row = document.createElement("tr");
+            const cell1 = document.createElement("td");
+            const cell2 = document.createElement("td");
+
+            if (editableFields.hasOwnProperty(key)) {
+              if (isAdminUser) {
+                const input = document.createElement("input");
+                input.name = key;
+                input.type = typeof data[key] === "boolean" ? "checkbox" : "text";
+                if (input.type === "checkbox") input.checked = data[key];
+                else input.value = data[key];
+                cell2.appendChild(input);
+              } else {
+                continue;
+              }
+            } else {
+              const span = document.createElement("span");
+              span.innerText = data[key];
+              cell2.appendChild(span);
+            }
+
+            cell1.innerText = label;
+            row.appendChild(cell1);
+            row.appendChild(cell2);
+            table.appendChild(row);
+          }
+
+          if (isAdminUser) {
+            saveBtn.style.display = "inline-block";
+          }
+        })
+        .catch(() => alert("Failed to load patient details."))
+        .finally(() => spinner.style.display = 'none');
+    };
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      spinner.style.display = "flex";
+
+      const updatedData = { patientId };
+      [...form.elements].forEach(el => {
+        if (el.name) {
+          updatedData[el.name] = el.type === "checkbox" ? el.checked : el.value.trim();
+        }
+      });
+
+      fetch(scriptUrl, {
+        method: "POST",
+        body: JSON.stringify(updatedData),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "Success") {
+          alert("Record updated!");
+        } else {
+          alert("Error: " + res.message);
+        }
+      })
+      .catch(() => alert("Failed to update patient record."))
+      .finally(() => spinner.style.display = "none");
+    });
   </script>
 </body>
 </html>
