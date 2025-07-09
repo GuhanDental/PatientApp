@@ -1,144 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Patient Details</title>
   <style>
-    body { font-family: Arial; margin: 20px; }
-    .section { margin-bottom: 20px; }
-    table { width: 100%; max-width: 600px; border-spacing: 8px; }
-    td { vertical-align: top; }
-    label { display: block; margin-bottom: 4px; font-weight: bold; }
-    input, textarea { width: 100%; padding: 6px; margin-bottom: 8px; }
-    button { padding: 8px 16px; font-size: 16px; }
-    input[readonly] { background-color: #f0f0f0; }
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h2 { text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    td, th { border: 1px solid #ccc; padding: 8px; }
+    th { background-color: #f9f9f9; text-align: left; }
     .spinner {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
+      display: none; position: fixed; top: 0; left: 0;
       width: 100vw; height: 100vh;
       background: rgba(255,255,255,0.7);
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
+      justify-content: center; align-items: center; z-index: 9999;
+    }
+    .logo {
+      margin: 20px;
     }
     .spinner img {
-      width: 60px;
-      animation: spin 1s linear infinite;
+      width: 60px; animation: spin 1s linear infinite;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    .logo {
-      text-align: center;
-      margin: 20px;
-    }
   </style>
 </head>
 <body>
-  <div class="logo">
+   <div class="logo">
     <img src="Guhan-dental-clinic-logo.png" alt="Clinic Logo" width="120">
   </div>
-
-  <div style="margin-bottom: 20px;">
-    <a href="index.html">← Back to Patient Entry</a>
-  </div>
-
-  <h2>Patient Records</h2>
-  <div class="spinner" id="spinner"><img src="tooth-spinner.png" alt="Loading..." /></div>
+  <h2>Patient Details</h2>
   <div id="detailsContainer"></div>
 
+  <div class="spinner" id="spinner">
+    <img src="tooth-spinner.png" alt="Loading..." />
+  </div>
+
   <script>
-    const patientId = new URLSearchParams(window.location.search).get('patientId');
-    const apiUrl ='/.netlify/functions/submit-patient';
-    const container = document.getElementById('detailsContainer');
-    const spinner = document.getElementById('spinner');
+    const scriptUrl = "/.netlify/functions/submit-patient";
+    const spinner = document.getElementById("spinner");
+    const container = document.getElementById("detailsContainer");
+
+    const params = new URLSearchParams(window.location.search);
+    const patientId = params.get("patientId");
 
     if (!patientId) {
-      container.innerHTML = '<p style="color:red;">Missing Patient ID in URL.</p>';
+      container.innerHTML = "<p>Invalid Patient ID</p>";
     } else {
-      spinner.style.display = 'flex';
-      fetch(`${apiUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}`)
-        .then(r => r.json())
+      spinner.style.display = "flex";
+      fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}`)
+        .then(res => res.json())
         .then(data => {
-          spinner.style.display = 'none';
-          if (data.status === 'Error') {
-            container.innerHTML = `<p style="color:red;">${data.message}</p>`;
+          if (data.status === "Error") {
+            container.innerHTML = `<p>${data.message}</p>`;
             return;
           }
 
-          const email = (data.userEmail || "").toLowerCase();
-          const isInternal = email === "guhandental@gmail.com";
-          delete data.userEmail;
+          const table = document.createElement("table");
+          const tbody = document.createElement("tbody");
 
-          let html = `
-            <form id="editForm">
-              <div class="section">
-                <h3>Patient Details</h3>
-                <table>
-                  <tr><td><label>Patient ID</label><input name="patientId" value="${data.patientId}" readonly></td></tr>
-                  <tr><td><label>Name</label><input name="name" value="${data.name || ''}" required></td></tr>
-                  <tr><td><label>Age</label><input type="number" name="age" value="${data.age || ''}" required></td></tr>
-                  <tr><td><label>Gender</label><input name="gender" value="${data.gender || ''}" required></td></tr>
-                  <tr><td><label>Phone</label><input name="phone" value="${data.phone || ''}" required></td></tr>
-                  <tr><td><label>Description</label><textarea name="description">${data.description || ''}</textarea></td></tr>
-                  <tr><td><label><input type="checkbox" name="consultationFeesPaid" ${data.consultationFeesPaid === true || data.consultationFeesPaid === "true" ? "checked" : ""}> Consultation Fees Paid</label></td></tr>
-                </table>
-              </div>`;
+          for (let key in data) {
+            if (key === "userEmail" || key === "patientId") continue;
 
-          if (isInternal) {
-            html += `
-              <div class="section">
-                <h3>Payment Information</h3>
-                <table>
-                  <tr><td><label>Total Payment Charges</label><input name="totalPaymentCharges" type="number" value="${data.totalPaymentCharges || ''}" required></td></tr>
-                  <tr><td><label>Advance Paid</label><input name="advancePaid" type="number" value="${data.advancePaid || ''}" required></td></tr>
-                  <tr><td><label>Pending Payment</label><input name="pendingPayment" type="number" value="${data.pendingPayment || ''}" required></td></tr>
-                </table>
-              </div>`;
+            if (
+              ["totalPaymentCharges", "advancePaid", "pendingPayment"].includes(key) &&
+              data.userEmail !== "guhandental@gmail.com"
+            ) {
+              continue;
+            }
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <th>${formatLabel(key)}</th>
+              <td>${data[key]}</td>
+            `;
+            tbody.appendChild(row);
           }
 
-          html += `<button type="submit">Save Changes</button>
-                   <span id="saveStatus" style="margin-left:12px;"></span>
-                   </form>`;
-
-          container.innerHTML = html;
-
-          document.getElementById('editForm').addEventListener('submit', e => {
-            e.preventDefault();
-            document.getElementById('saveStatus').textContent = 'Saving…';
-            spinner.style.display = 'flex';
-
-            const formData = Object.fromEntries(new FormData(e.target).entries());
-            formData.consultationFeesPaid = document.querySelector('[name="consultationFeesPaid"]').checked;
-
-            fetch(apiUrl, {
-              method: 'POST',
-              body: JSON.stringify(formData),
-              headers: { 'Content-Type': 'application/json' }
-            })
-            .then(res => res.json())
-            .then(res => {
-              spinner.style.display = 'none';
-              if (res.status === 'Success') {
-                document.getElementById('saveStatus').textContent = '✅ Saved';
-              } else {
-                alert('Error: ' + res.message);
-                document.getElementById('saveStatus').textContent = '❌ Error';
-              }
-            })
-            .catch(() => {
-              spinner.style.display = 'none';
-              document.getElementById('saveStatus').textContent = '❌ Error';
-              alert('Failed to save.');
-            });
-          });
-
+          table.appendChild(tbody);
+          container.innerHTML = "";
+          container.appendChild(table);
         })
-        .catch(() => {
-          spinner.style.display = 'none';
-          container.innerHTML = '<p style="color:red;">Error loading details.</p>';
-        });
+        .catch(() => container.innerHTML = "<p>Failed to load patient details.</p>")
+        .finally(() => spinner.style.display = "none");
+    }
+
+    function formatLabel(label) {
+      return label
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, str => str.toUpperCase());
     }
   </script>
 </body>
