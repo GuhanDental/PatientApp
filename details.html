@@ -113,33 +113,42 @@
             const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
             if (key === "patientId" || key === "userEmail") continue;
 
-            let inputEl;
+            // admin-only fields
+            if (editableFields.hasOwnProperty(key)) {
+              if (isAdminUser) {
+                let inputEl;
+                if (typeof data[key] === "boolean") {
+                  inputEl = document.createElement("input");
+                  inputEl.type = "checkbox";
+                  inputEl.name = key;
+                  inputEl.checked = data[key];
+                } else {
+                  inputEl = document.createElement("input");
+                  inputEl.type = "text";
+                  inputEl.name = key;
+                  inputEl.value = data[key];
+                }
 
-            if (editableFields.hasOwnProperty(key) && isAdminUser) {
-              if (typeof data[key] === "boolean") {
-                inputEl = document.createElement("input");
-                inputEl.type = "checkbox";
-                inputEl.name = key;
-                inputEl.checked = data[key];
-              } else {
-                inputEl = document.createElement("input");
-                inputEl.type = "text";
-                inputEl.name = key;
-                inputEl.value = data[key];
+                const row = document.createElement("tr");
+                const cell1 = document.createElement("td");
+                const cell2 = document.createElement("td");
+                cell1.innerText = label;
+                cell2.appendChild(inputEl);
+                row.appendChild(cell1);
+                row.appendChild(cell2);
+                table.appendChild(row);
               }
-            } else if (editableFields.hasOwnProperty(key)) {
-              // field is sensitive but user is not admin — skip rendering
               continue;
-            } else {
-              inputEl = document.createElement("span");
-              inputEl.innerText = data[key];
             }
 
+            // general fields (always visible)
             const row = document.createElement("tr");
             const cell1 = document.createElement("td");
             const cell2 = document.createElement("td");
+            const valueSpan = document.createElement("span");
+            valueSpan.innerText = data[key];
             cell1.innerText = label;
-            cell2.appendChild(inputEl);
+            cell2.appendChild(valueSpan);
             row.appendChild(cell1);
             row.appendChild(cell2);
             table.appendChild(row);
