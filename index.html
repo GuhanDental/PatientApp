@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Guhan Dental - Patient Entry</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+    }
+    .logo {
+      margin: 20px;
+    }
+    .form-container {
+      margin: 20px auto;
+      width: 600px;
+      text-align: left;
+    }
+    table.form-table, table.search-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table.form-table td, table.search-table th, table.search-table td {
+      padding: 8px;
+      border: 1px solid #ccc;
+    }
+    table.search-table th {
+      background-color: #f2f2f2;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 6px;
+      box-sizing: border-box;
+    }
+    .spinner {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(255,255,255,0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .spinner img {
+      width: 60px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <img src="Guhan-dental-clinic-logo.png" alt="Clinic Logo" width="120">
+  </div>
+
+  <div class="form-container">
+    <form id="patientForm">
+      <input type="hidden" name="patientId" id="patientId">
+      <table class="form-table">
+        <tr><td>Name</td><td><input type="text" name="name" required></td></tr>
+        <tr><td>Age</td><td><input type="number" name="age" required></td></tr>
+        <tr>
+          <td>Gender</td>
+          <td>
+            <select name="gender" required>
+              <option value="">Select</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </td>
+        </tr>
+        <tr><td>Phone</td><td><input type="text" name="phone" required></td></tr>
+        <tr><td>Description</td><td><textarea name="description"></textarea></td></tr>
+        <tr><td>Consultation Fees Paid</td><td><input type="checkbox" name="consultationFees"></td></tr>
+      </table>
+      <br>
+      <button type="submit">Submit</button>
+      <button type="button" onclick="resetForm()">Reset</button>
+    </form>
+  </div>
+
+  <hr>
+
+  <div class="form-container">
+    <table class="search-table">
+      <tr>
+        <td><input type="text" id="searchInput" placeholder="Search by Patient ID, Name or Phone" style="width:100%;"></td>
+        <td style="width:100px;"><button onclick="searchPatient()">Search</button></td>
+      </tr>
+    </table>
+    <div id="searchResults" style="margin-top: 20px;"></div>
+  </div>
+
+  <div class="spinner" id="spinner">
+    <img src="tooth-spinner.png" alt="Loading..." />
+  </div>
+
+  <script>
+    const scriptUrl = '/.netlify/functions/submit-patient';
+    const spinner = document.getElementById('spinner');
+    const form = document.getElementById('patientForm');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      spinner.style.display = 'flex';
+
+      const data = {};
+      [...form.elements].forEach(el => {
+        if (el.name) {
+          data[el.name] = el.type === 'checkbox' ? el.checked : el.value.trim();
+        }
+      });
+
+      fetch(scriptUrl, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "Success") {
+          alert("Record saved! Patient ID: " + res.patientId);
+          resetForm();
+        } else {
+          alert("Error: " + res.message);
+        }
+      })
+      .catch(() => alert("Error submitting form."))
+      .finally(() => spinner.style.display = 'none');
+    });
+
+    function resetForm() {
+      form.reset();
+      document.getElementById('patientId').value = '';
+    }
+
+    function searchPatient() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return alert("Please enter a search term.");
+      spinner.style.display = 'flex';
+
+      fetch(`${scriptUrl}?action=search&query=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => displayResults(data))
+        .catch(() => alert("Search failed."))
+        .finally(() => spinner.style.display = 'none');
+    }
+
+    function displayResults(data) {
+      const container = document.getElementById('searchResults');
+      container.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        container.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      const table = document.createElement('table');
+      table.className = 'search-table';
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Patient ID</th><th>Name</th><th>Phone</th>
+            <th>Age</th><th>Gender</th><th>Description</th>
+            <th>Timestamp</th><th>Consultation Paid</th>
+          </tr>
+        </thead>
+      `;
+      const tbody = document.createElement('tbody');
+
+      data.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><a href="details.html?patientId=${item.patientId}" target="_blank">${item.patientId}</a></td>
+          <td>${item.name}</td>
+          <td>${item.phone}</td>
+          <td>${item.age}</td>
+          <td>${item.gender}</td>
+          <td>${item.description}</td>
+          <td>${item.timestamp}</td>
+          <td>${item.consultationpaid ? "Yes" : "No"}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+  </script>
+</body>
+</html>
