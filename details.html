@@ -176,26 +176,28 @@ Object.keys(data).forEach(k => {
       });
 
       fetch(scriptUrl, {
-        method: "POST",
-        body: JSON.stringify(updatedData),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(res => res.json())
-     .then(res => {
-  if (res.status === "Success") {
-    if (res.operation === "updated") {
-      alert("✅ Existing record updated!\nPatient ID: " + res.patientId);
+  method: "POST",
+  body: JSON.stringify(updatedData),
+  headers: { 'Content-Type': 'application/json' }
+})
+.then(async res => {
+  const text = await res.text();
+  try {
+    const json = JSON.parse(text);
+    if (json.status === "Success") {
+      alert(`✅ Record ${json.operation === "updated" ? "updated" : "inserted"}!\nPatient ID: ${json.patientId}`);
     } else {
-      alert("🆕 New entry added!\nPatient ID: " + res.patientId);
+      alert("❌ Error: " + json.message);
     }
-    resetForm();
-  } else {
-    alert("❌ Error: " + res.message);
+  } catch (err) {
+    console.error("Failed to parse JSON:", text);
+    alert("❌ Invalid server response. Check console.");
   }
 })
-        .catch(() => alert("Failed to update patient record."))
-      .finally(() => spinner.style.display = "none");
-    });
+.catch(err => {
+  console.error("Fetch failed:", err);
+  alert("Failed to update patient record.");
+});
   </script>
 </body>
 </html>
