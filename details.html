@@ -107,7 +107,6 @@
             return;
           }
 
-          // Hidden input to submit patientId
           const pidInput = document.createElement("input");
           pidInput.type = "hidden";
           pidInput.name = "patientId";
@@ -116,11 +115,10 @@
 
           Object.keys(data).forEach(key => {
             if (key === "userEmail") return;
-
             const value = data[key];
             const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
 
-            // skip payment fields for assistant
+            // Assistant should not see payment fields
             if (!isAdmin && paymentFields.includes(key)) return;
 
             const row = document.createElement("tr");
@@ -128,6 +126,7 @@
             const cell2 = document.createElement("td");
             cell1.innerText = label;
 
+            // Admin can edit certain fields
             if (editableFields.includes(key) && isAdmin) {
               let input;
               if (key === "consultationFeesPaid") {
@@ -146,19 +145,21 @@
               table.appendChild(row);
               actionButtons.style.display = "block";
             } else {
+              // Non-editable field (shown with span)
               const span = document.createElement("span");
               span.innerText = value ?? "";
               cell2.appendChild(span);
               row.appendChild(cell1);
               row.appendChild(cell2);
               table.appendChild(row);
-
-              const hidden = document.createElement("input");
-              hidden.type = "hidden";
-              hidden.name = key;
-              hidden.value = value ?? "";
-              form.appendChild(hidden);
             }
+
+            // Always add hidden inputs to preserve all fields on submission
+            const hidden = document.createElement("input");
+            hidden.type = "hidden";
+            hidden.name = key;
+            hidden.value = value ?? "";
+            form.appendChild(hidden);
           });
         })
         .catch(() => alert("❌ Failed to load patient details."))
