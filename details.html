@@ -151,11 +151,13 @@
               table.appendChild(row);
             }
 
-            const hidden = document.createElement("input");
-            hidden.type = "hidden";
-            hidden.name = key;
-            hidden.value = value ?? "";
-            form.appendChild(hidden);
+           if (!(editableFields.includes(key) && isAdmin)) {
+  const hidden = document.createElement("input");
+  hidden.type = "hidden";
+  hidden.name = key;
+  hidden.value = value ?? "";
+  form.appendChild(hidden);
+}
           });
         })
         .catch(() => alert("❌ Failed to load patient details."))
