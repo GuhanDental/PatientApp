@@ -88,6 +88,10 @@
       description: "Description"
     };
 
+    const hiddenFields = ["userEmail", "timestamp", "entryType"];
+
+    const isAdminUser = localStorage.getItem("userEmail") === "guhandental@gmail.com";
+
     window.onload = () => {
       if (!patientId) {
         alert("No patient ID provided.");
@@ -103,14 +107,23 @@
             return;
           }
 
+          // Always add hidden patientId
+          const idInput = document.createElement("input");
+          idInput.type = "hidden";
+          idInput.name = "patientId";
+          idInput.value = patientId;
+          form.appendChild(idInput);
+
           Object.keys(data).forEach(key => {
+            const value = data[key];
             const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
-            if (key === "patientId") {
-              // Add hidden input for patientId
+
+            if (hiddenFields.includes(key)) {
+              // Not shown but submitted
               const hiddenInput = document.createElement("input");
               hiddenInput.type = "hidden";
               hiddenInput.name = key;
-              hiddenInput.value = data[key];
+              hiddenInput.value = value ?? "";
               form.appendChild(hiddenInput);
               return;
             }
@@ -120,31 +133,32 @@
             const cell2 = document.createElement("td");
             cell1.innerText = label;
 
-            if (editableFields.hasOwnProperty(key)) {
+            if (editableFields.hasOwnProperty(key) && isAdminUser) {
               let inputEl;
               if (key === "consultationFeesPaid") {
                 inputEl = document.createElement("input");
                 inputEl.type = "checkbox";
                 inputEl.name = key;
-                inputEl.checked = (data[key] === true || data[key] === "true" || data[key] === "Yes");
+                inputEl.checked = value === true || value === "true" || value === "Yes";
               } else {
                 inputEl = document.createElement("input");
                 inputEl.type = "text";
                 inputEl.name = key;
-                inputEl.value = data[key] ?? "";
+                inputEl.value = value ?? "";
               }
               cell2.appendChild(inputEl);
               saveBtn.style.display = "inline-block";
             } else {
+              // Read-only display + hidden input for submission
+              const span = document.createElement("span");
+              span.innerText = value ?? "";
+              cell2.appendChild(span);
+
               const hiddenInput = document.createElement("input");
               hiddenInput.type = "hidden";
               hiddenInput.name = key;
-              hiddenInput.value = data[key];
+              hiddenInput.value = value ?? "";
               form.appendChild(hiddenInput);
-
-              const span = document.createElement("span");
-              span.innerText = data[key];
-              cell2.appendChild(span);
             }
 
             row.appendChild(cell1);
