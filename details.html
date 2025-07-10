@@ -85,30 +85,21 @@
     const spinner = document.getElementById("spinner");
     const table = document.getElementById("detailsTable");
     const form = document.getElementById("detailsForm");
-    const saveBtn = document.getElementById("saveBtn");
     const actionButtons = document.getElementById("actionButtons");
+
     const patientId = new URLSearchParams(window.location.search).get("patientId");
     const email = localStorage.getItem("userEmail");
-    const isAdminUser = email === "guhandental@gmail.com";
+    const isAdmin = email === "guhandental@gmail.com";
+    const isAssistant = email === "guhandentalassistant@gmail.com";
 
-    const editableFields = {
-      consultationFeesPaid: "Consultation Fees Paid",
-      totalPaymentCharges: "Total Payment Charges",
-      advancePaid: "Advance Paid",
-      pendingPayment: "Pending Payment",
-      description: "Description"
-    };
-
-    const hiddenFields = ["userEmail", "timestamp", "entryType"];
+    const editableFields = ["description", "consultationFeesPaid", "totalPaymentCharges", "advancePaid", "pendingPayment"];
+    const paymentFields = ["consultationFeesPaid", "totalPaymentCharges", "advancePaid", "pendingPayment"];
 
     window.onload = () => {
-      if (!patientId) {
-        alert("No patient ID provided.");
-        return;
-      }
+      if (!patientId) return alert("No patient ID provided.");
 
       spinner.style.display = 'flex';
-      fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}`)
+      fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}&userEmail=${encodeURIComponent(email)}`)
         .then(res => res.json())
         .then(data => {
           if (data.status === "Error") {
@@ -116,74 +107,61 @@
             return;
           }
 
-          const idInput = document.createElement("input");
-          idInput.type = "hidden";
-          idInput.name = "patientId";
-          idInput.value = patientId;
-          form.appendChild(idInput);
+          // Hidden input to submit patientId
+          const pidInput = document.createElement("input");
+          pidInput.type = "hidden";
+          pidInput.name = "patientId";
+          pidInput.value = patientId;
+          form.appendChild(pidInput);
 
           Object.keys(data).forEach(key => {
-            const value = data[key];
             if (key === "userEmail") return;
+
+            const value = data[key];
             const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
 
-            if (hiddenFields.includes(key)) {
+            // skip payment fields for assistant
+            if (!isAdmin && paymentFields.includes(key)) return;
+
+            const row = document.createElement("tr");
+            const cell1 = document.createElement("td");
+            const cell2 = document.createElement("td");
+            cell1.innerText = label;
+
+            if (editableFields.includes(key) && isAdmin) {
+              let input;
+              if (key === "consultationFeesPaid") {
+                input = document.createElement("input");
+                input.type = "checkbox";
+                input.name = key;
+                input.checked = value === true || value === "true" || value === "Yes";
+              } else {
+                input = document.createElement("textarea");
+                input.name = key;
+                input.value = value ?? "";
+              }
+              cell2.appendChild(input);
+              row.appendChild(cell1);
+              row.appendChild(cell2);
+              table.appendChild(row);
+              actionButtons.style.display = "block";
+            } else {
+              const span = document.createElement("span");
+              span.innerText = value ?? "";
+              cell2.appendChild(span);
+              row.appendChild(cell1);
+              row.appendChild(cell2);
+              table.appendChild(row);
+
               const hidden = document.createElement("input");
               hidden.type = "hidden";
               hidden.name = key;
               hidden.value = value ?? "";
               form.appendChild(hidden);
-              return;
             }
-
-            if (editableFields.hasOwnProperty(key)) {
-              if (!isAdminUser) return;
-
-              const row = document.createElement("tr");
-              const cell1 = document.createElement("td");
-              const cell2 = document.createElement("td");
-              cell1.innerText = label;
-
-              let inputEl;
-              if (key === "consultationFeesPaid") {
-                inputEl = document.createElement("input");
-                inputEl.type = "checkbox";
-                inputEl.name = key;
-                inputEl.checked = value === true || value === "true" || value === "Yes";
-              } else {
-                inputEl = document.createElement("input");
-                inputEl.type = "text";
-                inputEl.name = key;
-                inputEl.value = value ?? "";
-              }
-
-              cell2.appendChild(inputEl);
-              row.appendChild(cell1);
-              row.appendChild(cell2);
-              table.appendChild(row);
-              actionButtons.style.display = "block";
-              return;
-            }
-
-            const row = document.createElement("tr");
-            const cell1 = document.createElement("td");
-            const cell2 = document.createElement("td");
-            const span = document.createElement("span");
-            span.innerText = value ?? "";
-            cell1.innerText = label;
-            cell2.appendChild(span);
-            row.appendChild(cell1);
-            row.appendChild(cell2);
-            table.appendChild(row);
-
-            const hiddenInput = document.createElement("input");
-            hiddenInput.type = "hidden";
-            hiddenInput.name = key;
-            hiddenInput.value = value ?? "";
-            form.appendChild(hiddenInput);
           });
         })
-        .catch(() => alert("Failed to load patient details."))
+        .catch(() => alert("❌ Failed to load patient details."))
         .finally(() => spinner.style.display = 'none');
     };
 
@@ -200,30 +178,24 @@
 
       fetch(scriptUrl, {
         method: "POST",
-        body: JSON.stringify(updatedData),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData)
       })
-        .then(async res => {
-          const text = await res.text();
-          try {
-            const json = JSON.parse(text);
-            if (json.status === "Success") {
-              alert(`✅ Record ${json.operation === "updated" ? "updated" : "inserted"}!\nPatient ID: ${json.patientId}`);
-            } else {
-              alert("❌ Error: " + json.message);
-            }
-          } catch (err) {
-            console.error("Invalid JSON:", text);
-            alert("❌ Invalid response from server.");
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === "Success") {
+            alert(`✅ Record ${res.operation === "updated" ? "updated" : "inserted"}!\nPatient ID: ${res.patientId}`);
+          } else {
+            alert("❌ Error: " + res.message);
           }
         })
-        .catch(() => alert("Failed to update patient record."))
+        .catch(() => alert("❌ Failed to update patient record."))
         .finally(() => spinner.style.display = "none");
     });
 
     function resetEditableFields() {
       [...form.elements].forEach(el => {
-        if (editableFields.hasOwnProperty(el.name)) {
+        if (editableFields.includes(el.name)) {
           if (el.type === "checkbox") {
             el.checked = false;
           } else {
