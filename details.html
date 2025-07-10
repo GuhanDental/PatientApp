@@ -90,7 +90,7 @@
     const patientId = new URLSearchParams(window.location.search).get("patientId");
     const email = localStorage.getItem("userEmail");
     const isAdminUser = email === "guhandental@gmail.com";
-    const isAssistant = email === "guhandentalassistant@gmail.com";
+    const isAssistantUser = email === "guhandentalassistant@gmail.com";
 
     const editableFields = ["description", "consultationFeesPaid", "totalPaymentCharges", "advancePaid", "pendingPayment"];
     const paymentFields = ["consultationFeesPaid", "totalPaymentCharges", "advancePaid", "pendingPayment"];
