@@ -111,7 +111,19 @@
             return;
           }
 
-          formData = data;
+          formData = data; // full record including name, age, etc.
+
+Object.keys(data).forEach(k => {
+  if (!editableFields.hasOwnProperty(k) && k !== "patientId") {
+    // Store non-editable fields in hidden inputs to include in form submission
+    const hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.name = k;
+    hiddenInput.value = data[k];
+    form.appendChild(hiddenInput);
+  }
+});
+
 
           for (let key in data) {
             if (key === "patientId" || key === "userEmail") continue;
