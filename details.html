@@ -168,14 +168,19 @@
         headers: { 'Content-Type': 'application/json' }
       })
       .then(res => res.json())
-      .then(res => {
-        if (res.status === "Success") {
-          alert("Record updated!");
-        } else {
-          alert("Error: " + res.message);
-        }
-      })
-      .catch(() => alert("Failed to update patient record."))
+     .then(res => {
+  if (res.status === "Success") {
+    if (res.operation === "updated") {
+      alert("✅ Existing record updated!\nPatient ID: " + res.patientId);
+    } else {
+      alert("🆕 New entry added!\nPatient ID: " + res.patientId);
+    }
+    resetForm();
+  } else {
+    alert("❌ Error: " + res.message);
+  }
+})
+        .catch(() => alert("Failed to update patient record."))
       .finally(() => spinner.style.display = "none");
     });
   </script>
