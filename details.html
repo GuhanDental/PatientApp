@@ -101,7 +101,8 @@
 
       spinner.style.display = 'flex';
 
-      fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}&userEmail=${encodeURIComponent(email)}`)
+     fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}&userEmail=${encodeURIComponent(getUserEmail())}`)
+
         .then(res => res.json())
         .then(data => {
           if (data.status === "Error") {
