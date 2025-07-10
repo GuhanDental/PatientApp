@@ -81,29 +81,21 @@
     const patientId = new URLSearchParams(window.location.search).get("patientId");
 
     const editableFields = {
-      description: "Description",
       consultationFeesPaid: "Consultation Fees Paid",
       totalPaymentCharges: "Total Payment Charges",
       advancePaid: "Advance Paid",
-      pendingPayment: "Pending Payment"
+      pendingPayment: "Pending Payment",
+      description: "Description"
     };
 
-    let formData = {};
-
     window.onload = () => {
-      const email = getUserEmail();
-      const isAdminUser = isAdmin();
-      const isAssistantUser = isAssistant();
-
       if (!patientId) {
         alert("No patient ID provided.");
         return;
       }
 
       spinner.style.display = 'flex';
-
-     fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}&userEmail=${encodeURIComponent(getUserEmail())}`)
-
+      fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}`)
         .then(res => res.json())
         .then(data => {
           if (data.status === "Error") {
@@ -111,56 +103,59 @@
             return;
           }
 
-          formData = data; // full record including name, age, etc.
-
-Object.keys(data).forEach(k => {
-  if (!editableFields.hasOwnProperty(k) && k !== "patientId") {
-    // Store non-editable fields in hidden inputs to include in form submission
-    const hiddenInput = document.createElement("input");
-    hiddenInput.type = "hidden";
-    hiddenInput.name = k;
-    hiddenInput.value = data[k];
-    form.appendChild(hiddenInput);
-  }
-});
-
-
-          for (let key in data) {
-            if (key === "patientId" || key === "userEmail") continue;
-
+          Object.keys(data).forEach(key => {
             const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
+            if (key === "patientId") {
+              // Add hidden input for patientId
+              const hiddenInput = document.createElement("input");
+              hiddenInput.type = "hidden";
+              hiddenInput.name = key;
+              hiddenInput.value = data[key];
+              form.appendChild(hiddenInput);
+              return;
+            }
+
             const row = document.createElement("tr");
             const cell1 = document.createElement("td");
             const cell2 = document.createElement("td");
+            cell1.innerText = label;
 
             if (editableFields.hasOwnProperty(key)) {
-              if (isAdminUser) {
-                const input = document.createElement("input");
-                input.name = key;
-                input.type = typeof data[key] === "boolean" ? "checkbox" : "text";
-                if (input.type === "checkbox") input.checked = data[key];
-                else input.value = data[key];
-                cell2.appendChild(input);
+              let inputEl;
+              if (key === "consultationFeesPaid") {
+                inputEl = document.createElement("input");
+                inputEl.type = "checkbox";
+                inputEl.name = key;
+                inputEl.checked = (data[key] === true || data[key] === "true" || data[key] === "Yes");
               } else {
-                continue;
+                inputEl = document.createElement("input");
+                inputEl.type = "text";
+                inputEl.name = key;
+                inputEl.value = data[key] ?? "";
               }
+              cell2.appendChild(inputEl);
+              saveBtn.style.display = "inline-block";
             } else {
+              const hiddenInput = document.createElement("input");
+              hiddenInput.type = "hidden";
+              hiddenInput.name = key;
+              hiddenInput.value = data[key];
+              form.appendChild(hiddenInput);
+
               const span = document.createElement("span");
               span.innerText = data[key];
               cell2.appendChild(span);
             }
 
-            cell1.innerText = label;
             row.appendChild(cell1);
             row.appendChild(cell2);
             table.appendChild(row);
-          }
-
-          if (isAdminUser) {
-            saveBtn.style.display = "inline-block";
-          }
+          });
         })
-        .catch(() => alert("Failed to load patient details."))
+        .catch(err => {
+          console.error("Fetch error:", err);
+          alert("Failed to load patient details.");
+        })
         .finally(() => spinner.style.display = 'none');
     };
 
@@ -168,7 +163,7 @@ Object.keys(data).forEach(k => {
       e.preventDefault();
       spinner.style.display = "flex";
 
-      const updatedData = { patientId };
+      const updatedData = {};
       [...form.elements].forEach(el => {
         if (el.name) {
           updatedData[el.name] = el.type === "checkbox" ? el.checked : el.value.trim();
@@ -176,28 +171,30 @@ Object.keys(data).forEach(k => {
       });
 
       fetch(scriptUrl, {
-  method: "POST",
-  body: JSON.stringify(updatedData),
-  headers: { 'Content-Type': 'application/json' }
-})
-.then(async res => {
-  const text = await res.text();
-  try {
-    const json = JSON.parse(text);
-    if (json.status === "Success") {
-      alert(`✅ Record ${json.operation === "updated" ? "updated" : "inserted"}!\nPatient ID: ${json.patientId}`);
-    } else {
-      alert("❌ Error: " + json.message);
-    }
-  } catch (err) {
-    console.error("Failed to parse JSON:", text);
-    alert("❌ Invalid server response. Check console.");
-  }
-})
-.catch(err => {
-  console.error("Fetch failed:", err);
-  alert("Failed to update patient record.");
-});
+        method: "POST",
+        body: JSON.stringify(updatedData),
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then(async res => {
+          const text = await res.text();
+          try {
+            const json = JSON.parse(text);
+            if (json.status === "Success") {
+              alert(`✅ Record ${json.operation === "updated" ? "updated" : "inserted"}!\nPatient ID: ${json.patientId}`);
+            } else {
+              alert("❌ Error: " + json.message);
+            }
+          } catch (err) {
+            console.error("Failed to parse response:", text);
+            alert("❌ Invalid response from server.");
+          }
+        })
+        .catch(err => {
+          console.error("Fetch failed:", err);
+          alert("Failed to update patient record.");
+        })
+        .finally(() => spinner.style.display = "none");
+    });
   </script>
 </body>
 </html>
