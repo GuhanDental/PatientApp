@@ -61,6 +61,9 @@
   </style>
 </head>
 <body>
+  <div style="text-align: right; margin-bottom: 10px;">
+  <button onclick="logout()" style="padding: 6px 12px;">Logout</button>
+</div>
   <div class="logo">
     <img src="Guhan-dental-clinic-logo.png" alt="Clinic Logo" width="120">
   </div>
@@ -203,6 +206,14 @@
         }
       });
     }
+
+
+  function logout() {
+    localStorage.removeItem("userEmail");
+    window.location.href = "login.html";
+  }
+
+
   </script>
 </body>
 </html>
