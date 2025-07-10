@@ -118,7 +118,6 @@
             const value = data[key];
             const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
 
-            // Assistant should not see payment fields
             if (!isAdmin && paymentFields.includes(key)) return;
 
             const row = document.createElement("tr");
@@ -126,7 +125,6 @@
             const cell2 = document.createElement("td");
             cell1.innerText = label;
 
-            // Admin can edit certain fields
             if (editableFields.includes(key) && isAdmin) {
               let input;
               if (key === "consultationFeesPaid") {
@@ -145,7 +143,6 @@
               table.appendChild(row);
               actionButtons.style.display = "block";
             } else {
-              // Non-editable field (shown with span)
               const span = document.createElement("span");
               span.innerText = value ?? "";
               cell2.appendChild(span);
@@ -154,7 +151,6 @@
               table.appendChild(row);
             }
 
-            // Always add hidden inputs to preserve all fields on submission
             const hidden = document.createElement("input");
             hidden.type = "hidden";
             hidden.name = key;
