@@ -89,7 +89,7 @@
 
     const patientId = new URLSearchParams(window.location.search).get("patientId");
     const email = localStorage.getItem("userEmail");
-    const isAdmin = email === "guhandental@gmail.com";
+    const isAdminUser = email === "guhandental@gmail.com";
     const isAssistant = email === "guhandentalassistant@gmail.com";
 
     const editableFields = ["description", "consultationFeesPaid", "totalPaymentCharges", "advancePaid", "pendingPayment"];
@@ -118,14 +118,14 @@
             const value = data[key];
             const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
 
-            if (!isAdmin && paymentFields.includes(key)) return;
+            if (!isAdminUser && paymentFields.includes(key)) return;
 
             const row = document.createElement("tr");
             const cell1 = document.createElement("td");
             const cell2 = document.createElement("td");
             cell1.innerText = label;
 
-            if (editableFields.includes(key) && isAdmin) {
+            if (editableFields.includes(key) && isAdminUser) {
               let input;
               if (key === "consultationFeesPaid") {
                 input = document.createElement("input");
@@ -151,7 +151,7 @@
               table.appendChild(row);
             }
 
-           if (!(editableFields.includes(key) && isAdmin)) {
+           if (!(editableFields.includes(key) && isAdminUser)) {
   const hidden = document.createElement("input");
   hidden.type = "hidden";
   hidden.name = key;
