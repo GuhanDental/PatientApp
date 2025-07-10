@@ -49,9 +49,14 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    #saveBtn {
+    .button-row {
       margin-top: 20px;
       display: none;
+      text-align: center;
+    }
+    .button-row button {
+      margin: 0 10px;
+      padding: 6px 16px;
     }
   </style>
 </head>
@@ -64,7 +69,10 @@
     <h2>Patient Details</h2>
     <form id="detailsForm">
       <table id="detailsTable"></table>
-      <button id="saveBtn" type="submit">Save</button>
+      <div class="button-row" id="actionButtons">
+        <button type="submit" id="saveBtn">Save</button>
+        <button type="button" onclick="resetEditableFields()">Reset</button>
+      </div>
     </form>
   </div>
 
@@ -78,7 +86,10 @@
     const table = document.getElementById("detailsTable");
     const form = document.getElementById("detailsForm");
     const saveBtn = document.getElementById("saveBtn");
+    const actionButtons = document.getElementById("actionButtons");
     const patientId = new URLSearchParams(window.location.search).get("patientId");
+    const email = localStorage.getItem("userEmail");
+    const isAdminUser = email === "guhandental@gmail.com";
 
     const editableFields = {
       consultationFeesPaid: "Consultation Fees Paid",
@@ -89,8 +100,6 @@
     };
 
     const hiddenFields = ["userEmail", "timestamp", "entryType"];
-
-    const isAdminUser = localStorage.getItem("userEmail") === "guhandental@gmail.com";
 
     window.onload = () => {
       if (!patientId) {
@@ -107,7 +116,6 @@
             return;
           }
 
-          // Always add hidden patientId
           const idInput = document.createElement("input");
           idInput.type = "hidden";
           idInput.name = "patientId";
@@ -116,24 +124,26 @@
 
           Object.keys(data).forEach(key => {
             const value = data[key];
+            if (key === "userEmail") return;
             const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
 
             if (hiddenFields.includes(key)) {
-              // Not shown but submitted
-              const hiddenInput = document.createElement("input");
-              hiddenInput.type = "hidden";
-              hiddenInput.name = key;
-              hiddenInput.value = value ?? "";
-              form.appendChild(hiddenInput);
+              const hidden = document.createElement("input");
+              hidden.type = "hidden";
+              hidden.name = key;
+              hidden.value = value ?? "";
+              form.appendChild(hidden);
               return;
             }
 
-            const row = document.createElement("tr");
-            const cell1 = document.createElement("td");
-            const cell2 = document.createElement("td");
-            cell1.innerText = label;
+            if (editableFields.hasOwnProperty(key)) {
+              if (!isAdminUser) return;
 
-            if (editableFields.hasOwnProperty(key) && isAdminUser) {
+              const row = document.createElement("tr");
+              const cell1 = document.createElement("td");
+              const cell2 = document.createElement("td");
+              cell1.innerText = label;
+
               let inputEl;
               if (key === "consultationFeesPaid") {
                 inputEl = document.createElement("input");
@@ -146,30 +156,34 @@
                 inputEl.name = key;
                 inputEl.value = value ?? "";
               }
-              cell2.appendChild(inputEl);
-              saveBtn.style.display = "inline-block";
-            } else {
-              // Read-only display + hidden input for submission
-              const span = document.createElement("span");
-              span.innerText = value ?? "";
-              cell2.appendChild(span);
 
-              const hiddenInput = document.createElement("input");
-              hiddenInput.type = "hidden";
-              hiddenInput.name = key;
-              hiddenInput.value = value ?? "";
-              form.appendChild(hiddenInput);
+              cell2.appendChild(inputEl);
+              row.appendChild(cell1);
+              row.appendChild(cell2);
+              table.appendChild(row);
+              actionButtons.style.display = "block";
+              return;
             }
 
+            const row = document.createElement("tr");
+            const cell1 = document.createElement("td");
+            const cell2 = document.createElement("td");
+            const span = document.createElement("span");
+            span.innerText = value ?? "";
+            cell1.innerText = label;
+            cell2.appendChild(span);
             row.appendChild(cell1);
             row.appendChild(cell2);
             table.appendChild(row);
+
+            const hiddenInput = document.createElement("input");
+            hiddenInput.type = "hidden";
+            hiddenInput.name = key;
+            hiddenInput.value = value ?? "";
+            form.appendChild(hiddenInput);
           });
         })
-        .catch(err => {
-          console.error("Fetch error:", err);
-          alert("Failed to load patient details.");
-        })
+        .catch(() => alert("Failed to load patient details."))
         .finally(() => spinner.style.display = 'none');
     };
 
@@ -199,16 +213,25 @@
               alert("❌ Error: " + json.message);
             }
           } catch (err) {
-            console.error("Failed to parse response:", text);
+            console.error("Invalid JSON:", text);
             alert("❌ Invalid response from server.");
           }
         })
-        .catch(err => {
-          console.error("Fetch failed:", err);
-          alert("Failed to update patient record.");
-        })
+        .catch(() => alert("Failed to update patient record."))
         .finally(() => spinner.style.display = "none");
     });
+
+    function resetEditableFields() {
+      [...form.elements].forEach(el => {
+        if (editableFields.hasOwnProperty(el.name)) {
+          if (el.type === "checkbox") {
+            el.checked = false;
+          } else {
+            el.value = "";
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>
