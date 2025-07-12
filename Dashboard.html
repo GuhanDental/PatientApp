@@ -74,7 +74,8 @@
         return;
       }
 
-      const url = `https://script.google.com/macros/s/YOUR_DEPLOYED_URL/exec?action=getDashboardData&from=${from}&to=${to}`;
+      const scriptUrl = "/.netlify/functions/submit-patient";
+      const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}`;
       const res = await fetch(url);
       const data = await res.json();
 
