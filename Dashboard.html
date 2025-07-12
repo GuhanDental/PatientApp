@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guhan Dental Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-50 min-h-screen font-sans text-gray-800">
+
+  <!-- Header -->
+  <div class="bg-white shadow p-6 flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-blue-700 flex items-center gap-3">
+      🦷 Guhan Dental <span class="text-sm text-blue-400 font-light hidden sm:inline">Dashboard</span>
+    </h1>
+    <span class="text-sm text-gray-500">Admin Access</span>
+  </div>
+
+  <!-- Content -->
+  <div class="max-w-7xl mx-auto py-8 px-4">
+    
+    <!-- Filter -->
+    <div class="flex flex-col sm:flex-row items-center gap-4 justify-center mb-8">
+      <div>
+        <label class="text-sm font-semibold text-gray-700">From</label>
+        <input type="date" id="fromDate" class="p-2 border border-blue-300 rounded-md shadow-sm">
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-gray-700">To</label>
+        <input type="date" id="toDate" class="p-2 border border-blue-300 rounded-md shadow-sm">
+      </div>
+      <button onclick="fetchDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow-md mt-2 sm:mt-6">
+        🔍 Filter
+      </button>
+    </div>
+
+    <!-- Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
+        <div class="text-blue-600 text-xl mb-2">👥 Total Patients</div>
+        <div class="text-3xl font-bold" id="totalPatients">--</div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
+        <div class="text-green-600 text-xl mb-2">🆕 New Today</div>
+        <div class="text-3xl font-bold" id="newPatientsToday">--</div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
+        <div class="text-purple-600 text-xl mb-2">💰 Revenue</div>
+        <div class="text-3xl font-bold" id="totalRevenue">--</div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
+        <div class="text-red-600 text-xl mb-2">⏳ Pending</div>
+        <div class="text-3xl font-bold" id="pendingPayments">--</div>
+      </div>
+    </div>
+
+    <!-- Footer Info (optional) -->
+    <div class="text-xs text-center text-gray-400 mt-10">
+      Powered by Guhan Dental System • Built for Admin Use Only
+    </div>
+
+  </div>
+
+  <!-- JS -->
+  <script>
+    async function fetchDashboard() {
+      const from = document.getElementById("fromDate").value;
+      const to = document.getElementById("toDate").value;
+
+      if (!from || !to) {
+        alert("Please select both From and To dates.");
+        return;
+      }
+
+      const url = `https://script.google.com/macros/s/YOUR_DEPLOYED_URL/exec?action=getDashboardData&from=${from}&to=${to}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      document.getElementById("totalPatients").textContent = data.totalPatients;
+      document.getElementById("newPatientsToday").textContent = data.newPatientsToday;
+      document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
+      document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
+    }
+  </script>
+</body>
+</html>
