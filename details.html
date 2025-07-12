@@ -78,6 +78,14 @@
       </div>
     </form>
   </div>
+  
+  <!-- Dashboard logic -->
+  
+  <div id="adminLinks" class="mt-10 text-center hidden">
+  <a href="dashboard.html" class="inline-block bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition">
+    📊 View Dashboard
+  </a>
+</div>
 
   <div class="spinner" id="spinner">
     <img src="tooth-spinner.png" alt="Loading..." />
@@ -165,6 +173,17 @@
         })
         .catch(() => alert("❌ Failed to load patient details."))
         .finally(() => spinner.style.display = 'none');
+
+// dashboard logic below
+
+      window.addEventListener("DOMContentLoaded", () => {
+  const role = localStorage.getItem("role");
+  if (role === "admin") {
+    document.getElementById("adminLinks").classList.remove("hidden");
+  }
+});
+
+      
     };
 
     form.addEventListener("submit", function (e) {
@@ -213,7 +232,7 @@
     window.location.href = "login.html";
   }
 
-
+    localStorage.setItem("role", "admin");
   </script>
 </body>
 </html>
