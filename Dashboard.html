@@ -1,169 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Guhan Dental Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+<body class="bg-blue-50 min-h-screen font-sans text-gray-800">
 
   <!-- Header -->
   <div class="bg-white shadow p-6 flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-blue-700 flex items-center gap-2">
-      🦷 Guhan Dental <span class="text-sm text-gray-400">Dashboard</span>
+    <h1 class="text-3xl font-bold text-blue-700 flex items-center gap-3">
+      🦷 Guhan Dental <span class="text-sm text-blue-400 font-light hidden sm:inline">Dashboard</span>
     </h1>
-    <div id="userEmail" class="text-sm text-gray-500">Not signed in</div>
-  </div>
-
-  <!-- Google Sign-In -->
-  <div id="signinDiv" class="flex justify-center py-10">
-    <div id="g_id_onload"
-         data-client_id="495253979256-tj4i9r7i8p1ee2girqllcuoaa261l0l3.apps.googleusercontent.com"
-         data-context="signin"
-         data-ux_mode="popup"
-         data-callback="onSignIn"
-         data-auto_prompt="false">
-    </div>
-    <div class="g_id_signin"
-         data-type="standard"
-         data-size="large"
-         data-theme="outline"
-         data-text="sign_in_with"
-         data-shape="rectangular"
-         data-logo_alignment="left">
-    </div>
+    <span class="text-sm text-gray-500">Admin Access</span>
   </div>
 
   <!-- Spinner -->
-  <div id="spinner" class="fixed inset-0 bg-white bg-opacity-70 flex justify-center items-center hidden z-50">
+  <div id="spinner" class="fixed inset-0 bg-white bg-opacity-75 flex justify-center items-center hidden z-50">
     <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600"></div>
   </div>
 
-  <!-- Main Dashboard Content -->
-  <div id="dashboardContent" class="max-w-6xl mx-auto p-6 hidden">
-    <!-- Date Filter -->
+  <!-- Content -->
+  <div class="max-w-7xl mx-auto py-8 px-4">
+
+    <!-- Filter -->
     <div class="flex flex-col sm:flex-row items-center gap-4 justify-center mb-8">
-      <input type="date" id="fromDate" class="p-2 border border-gray-300 rounded shadow-sm">
-      <input type="date" id="toDate" class="p-2 border border-gray-300 rounded shadow-sm">
-      <button onclick="fetchDashboard()" class="bg-blue-600 text-white px-4 py-2 rounded shadow">
+      <div>
+        <label class="text-sm font-semibold text-gray-700">From</label>
+        <input type="date" id="fromDate" class="p-2 border border-blue-300 rounded-md shadow-sm">
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-gray-700">To</label>
+        <input type="date" id="toDate" class="p-2 border border-blue-300 rounded-md shadow-sm">
+      </div>
+      <button onclick="fetchDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow-md mt-2 sm:mt-6">
         🔍 Filter
       </button>
     </div>
 
-    <!-- Metric Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white p-4 rounded-xl shadow text-center">
-        <div class="text-blue-600">👥 Total Patients</div>
-        <div id="totalPatients" class="text-2xl font-bold mt-1">--</div>
+    <!-- Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
+        <div class="text-blue-600 text-xl mb-2">👥 Total Patients</div>
+        <div class="text-3xl font-bold" id="totalPatients">--</div>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow text-center">
-        <div class="text-green-600">🆕 New Today</div>
-        <div id="newPatientsToday" class="text-2xl font-bold mt-1">--</div>
+      <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
+        <div class="text-green-600 text-xl mb-2">🆕 New Today</div>
+        <div class="text-3xl font-bold" id="newPatientsToday">--</div>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow text-center">
-        <div class="text-purple-600">💰 Revenue</div>
-        <div id="totalRevenue" class="text-2xl font-bold mt-1">--</div>
+      <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
+        <div class="text-purple-600 text-xl mb-2">💰 Revenue</div>
+        <div class="text-3xl font-bold" id="totalRevenue">--</div>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow text-center">
-        <div class="text-red-600">⏳ Pending</div>
-        <div id="pendingPayments" class="text-2xl font-bold mt-1">--</div>
+      <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
+        <div class="text-red-600 text-xl mb-2">⏳ Pending</div>
+        <div class="text-3xl font-bold" id="pendingPayments">--</div>
       </div>
     </div>
 
     <!-- Chart -->
-    <div class="bg-white p-4 rounded-xl shadow">
-      <canvas id="dashboardChart" height="100"></canvas>
+    <div class="bg-white p-5 rounded-2xl shadow">
+      <canvas id="dashboardChart"></canvas>
+    </div>
+
+    <div class="text-xs text-center text-gray-400 mt-10">
+      Powered by Guhan Dental System • Built for Admin Use Only
     </div>
   </div>
 
   <script>
-    const ADMIN_EMAIL = "guhandental@gmail.com";
-
-    function onSignIn(response) {
-      const jwt = response.credential;
-      const payload = JSON.parse(atob(jwt.split('.')[1]));
-      const email = payload.email;
-      document.getElementById("userEmail").textContent = email;
-
-      if (email !== ADMIN_EMAIL) {
-        alert("Access restricted to admin.");
-        return;
-      }
-
-      document.getElementById("signinDiv").classList.add("hidden");
-      document.getElementById("dashboardContent").classList.remove("hidden");
-
-      const today = new Date();
-      const lastWeek = new Date(today);
-      lastWeek.setDate(today.getDate() - 6);
-
-      document.getElementById("fromDate").value = lastWeek.toISOString().split("T")[0];
-      document.getElementById("toDate").value = today.toISOString().split("T")[0];
-
-      fetchDashboard();
-    }
-
     async function fetchDashboard() {
       const spinner = document.getElementById("spinner");
       spinner.classList.remove("hidden");
 
       const from = document.getElementById("fromDate").value;
       const to = document.getElementById("toDate").value;
+      const userEmail = "guhandental@gmail.com"; // ✅ FIX: Include email to pass authorization check
+
+      if (!from || !to) {
+        alert("Please select both From and To dates.");
+        spinner.classList.add("hidden");
+        return;
+      }
+
+      const scriptUrl = "/.netlify/functions/submit-patient";
+      const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}&userEmail=${encodeURIComponent(userEmail)}`;
 
       try {
-        const url = `/.netlify/functions/submit-patient?action=getDashboardData&from=${from}&to=${to}`;
         const res = await fetch(url);
-        const data = await res.json();
+        const text = await res.text();
 
-        if (data.error) throw new Error(data.error);
+        console.log("Raw response:", text); // For debugging
+        const data = JSON.parse(text);
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
 
         document.getElementById("totalPatients").textContent = data.totalPatients;
         document.getElementById("newPatientsToday").textContent = data.newPatientsToday;
         document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
         document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
 
-        drawChart(data);
+        updateChart(data);
       } catch (err) {
-        alert("Error fetching dashboard: " + err.message);
+        console.error("Error fetching dashboard:", err.message);
+        alert("Error: " + err.message);
+      } finally {
+        spinner.classList.add("hidden");
       }
-
-      spinner.classList.add("hidden");
     }
 
-    function drawChart(data) {
+    function updateChart(data) {
       const ctx = document.getElementById("dashboardChart").getContext("2d");
-      if (window.dashboardChart) window.dashboardChart.destroy();
-
+      if (window.dashboardChart instanceof Chart) {
+        window.dashboardChart.destroy();
+      }
       window.dashboardChart = new Chart(ctx, {
-        type: "bar",
+        type: 'bar',
         data: {
-          labels: ["Total Patients", "New Today", "Revenue", "Pending"],
+          labels: ['Total Patients', 'New Today', 'Revenue', 'Pending'],
           datasets: [{
-            label: "Overview",
-            data: [
-              data.totalPatients,
-              data.newPatientsToday,
-              data.totalRevenue,
-              data.pendingPayments
-            ],
-            backgroundColor: ["#3b82f6", "#22c55e", "#8b5cf6", "#ef4444"]
+            label: 'Overview',
+            data: [data.totalPatients, data.newPatientsToday, data.totalRevenue, data.pendingPayments],
+            backgroundColor: ['#3b82f6', '#22c55e', '#8b5cf6', '#ef4444']
           }]
         },
         options: {
           responsive: true,
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ctx.raw.toLocaleString() } }
           },
           scales: {
-            y: {
-              beginAtZero: true
-            }
+            y: { beginAtZero: true }
           }
         }
       });
     }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const today = new Date();
+      const lastWeek = new Date();
+      lastWeek.setDate(today.getDate() - 6);
+
+      const todayStr = today.toISOString().split("T")[0];
+      const weekAgoStr = lastWeek.toISOString().split("T")[0];
+
+      document.getElementById("fromDate").value = weekAgoStr;
+      document.getElementById("toDate").value = todayStr;
+
+      fetchDashboard();
+    });
   </script>
 </body>
 </html>
