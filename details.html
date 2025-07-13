@@ -240,23 +240,6 @@
         }
       });
     }
-
-   
-  window.addEventListener("DOMContentLoaded", () => {
-    const email = localStorage.getItem("userEmail");
-    const sidebar = document.getElementById("adminSidebar");
-    const toggleBtn = document.getElementById("adminToggleBtn");
-
-    if (email === "guhandental@gmail.com") {
-      sidebar.classList.remove("hidden");
-      toggleBtn.classList.remove("hidden");
-
-      toggleBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("-translate-x-full");
-      });
-    }
-  });
-
   function logout() {
     localStorage.removeItem("userEmail");
     window.location.href = "login.html";
@@ -273,23 +256,5 @@
 
     localStorage.setItem("role", "admin");
   </script>
-  <!-- Sidebar panel (Admin only) -->
-<div id="adminSidebar" class="hidden fixed top-0 left-0 h-full w-64 bg-blue-800 text-white shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-50">
-  <div class="p-4 text-xl font-semibold border-b border-blue-600">Admin Menu</div>
-  <ul class="p-4 space-y-4">
-    <li>
-      <a href="dashboard.html" class="block hover:bg-blue-700 px-4 py-2 rounded" target="_blank">
-        📊 Dashboard
-      </a>
-    </li>
-    <!-- Add more admin links here -->
-  </ul>
-</div>
-
-<!-- Toggle button -->
-<button id="adminToggleBtn" class="hidden fixed top-4 left-4 z-50 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
-  ☰ Menu
-</button>
-
 </body>
 </html>
