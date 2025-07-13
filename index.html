@@ -61,7 +61,10 @@
   <div class="logo">
     <img src="Guhan-dental-clinic-logo.png" alt="Clinic Logo" width="120">
   </div>
-
+  <div class="flex items-center gap-4">
+    <span id="userEmail" class="text-sm text-gray-600"></span>
+    <button onclick="logout()" class="text-sm text-red-500 underline">Logout</button>
+  </div>
   <div class="form-container">
     <form id="patientForm">
       <input type="hidden" name="patientId" id="patientId">
@@ -233,6 +236,16 @@ function formatToDDMMYYYYOnly(dateStr) {
     localStorage.removeItem("userEmail");
     window.location.href = "login.html";
   }
+
+     window.addEventListener("DOMContentLoaded", () => {
+    const email = localStorage.getItem("userEmail") || "";
+    document.getElementById("userEmail").textContent = email;
+
+    // Optional: redirect if not logged in
+    if (!email) {
+      window.location.href = "login.html";
+    }
+  });
     
   </script>
 </body>
