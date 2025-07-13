@@ -70,32 +70,43 @@
   </div>
 
   <script>
-    async function fetchDashboard() {
-      const spinner = document.getElementById("spinner");
-      spinner.classList.remove("hidden");
+   async function fetchDashboard() {
+  const spinner = document.getElementById("spinner");
+  spinner.classList.remove("hidden");
 
-      const from = document.getElementById("fromDate").value;
-      const to = document.getElementById("toDate").value;
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
 
-      if (!from || !to) {
-        alert("Please select both From and To dates.");
-        spinner.classList.add("hidden");
-        return;
-      }
+  if (!from || !to) {
+    alert("Please select both From and To dates.");
+    spinner.classList.add("hidden");
+    return;
+  }
 
-      const scriptUrl = "/.netlify/functions/submit-patient";
-      const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}`;
-      const res = await fetch(url);
-      const data = await res.json();
+  try {
+    const scriptUrl = "/.netlify/functions/submit-patient";
+    const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}`;
+    const res = await fetch(url);
+    let raw = await res.json();
+    let data = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (raw.body) data = JSON.parse(raw.body);
 
-      document.getElementById("totalPatients").textContent = data.totalPatients;
-      document.getElementById("newPatientsToday").textContent = data.newPatientsToday;
-      document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
-      document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
+    console.log("Final parsed data:", data);
 
-      updateChart(data);
-      spinner.classList.add("hidden");
-    }
+    document.getElementById("totalPatients").textContent = data.totalPatients;
+    document.getElementById("newPatientsToday").textContent = data.newPatientsToday;
+    document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
+    document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
+
+    updateChart(data);
+  } catch (err) {
+    console.error("Dashboard load error:", err);
+    alert("Error loading dashboard data.");
+  } finally {
+    spinner.classList.add("hidden");
+  }
+}
+
 
     function updateChart(data) {
       const ctx = document.getElementById("dashboardChart").getContext("2d");
