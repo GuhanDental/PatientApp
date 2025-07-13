@@ -101,11 +101,23 @@
     const patientId = new URLSearchParams(window.location.search).get("patientId");
     const email = localStorage.getItem("userEmail");
     const isAdminUser = email === "guhandental@gmail.com";
-    const isAssistantUser = email === "guhandentalassistant@gmail.com";
+    const isAssistantUser = email === "guhandentalassitant@gmail.com";
 
     const editableFields = ["description", "consultationFeesPaid", "totalPaymentCharges", "advancePaid", "pendingPayment"];
     const paymentFields = ["consultationFeesPaid", "totalPaymentCharges", "advancePaid", "pendingPayment"];
 
+    function formatToDDMMYYYYOnly(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+}
+
+    
     window.onload = () => {
       if (!patientId) return alert("No patient ID provided.");
 
@@ -126,7 +138,10 @@
 
           Object.keys(data).forEach(key => {
             if (key === "userEmail") return;
-            const value = data[key];
+          let value = data[key];
+         if (key.toLowerCase() === "timestamp") {
+         value = formatToDDMMYYYYOnly(value);
+          }
             const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
 
             if (!isAdminUser && paymentFields.includes(key)) return;
