@@ -80,7 +80,7 @@
       const data = await res.json();
 
       document.getElementById("totalPatients").textContent = data.totalPatients;
-      document.getElementById("newPatientsToday").textContent = data.newPatientsToday;
+      document.getElementById("newPatientsToday").textContent = data.newToday;
       document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
       document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
     }
