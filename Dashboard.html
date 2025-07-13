@@ -87,9 +87,16 @@
     const scriptUrl = "/.netlify/functions/submit-patient";
     const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}`;
     const res = await fetch(url);
-    let raw = await res.json();
-    let data = typeof raw === "string" ? JSON.parse(raw) : raw;
-    if (raw.body) data = JSON.parse(raw.body);
+const raw = await res.text();
+console.log("Response raw:", raw);
+
+let data = typeof raw === "string" ? JSON.parse(raw) : raw;
+if (typeof data.body === "string") {
+  data = JSON.parse(data.body);
+}
+
+console.log("Parsed data:", data);
+
 
     console.log("Final parsed data:", data);
 
