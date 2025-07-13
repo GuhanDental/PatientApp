@@ -68,7 +68,14 @@
   <div class="logo">
     <img src="Guhan-dental-clinic-logo.png" alt="Clinic Logo" width="120">
   </div>
-
+<div id="adminDashboardPanel" class="hidden mb-6">
+  <button onclick="toggleDashboardPanel()" class="bg-blue-600 text-white px-4 py-2 rounded mb-2">
+    📊 Toggle Dashboard
+  </button>
+  <div id="dashboardContent" class="hidden border rounded-lg shadow p-4 bg-white">
+    <iframe src="dashboard.html" class="w-full h-[600px] rounded" frameborder="0"></iframe>
+  </div>
+</div>
   <div class="form-container">
     <h2>Patient Details</h2>
     <form id="detailsForm">
@@ -242,6 +249,19 @@
       });
     }
 
+    function toggleDashboardPanel() {
+    const content = document.getElementById("dashboardContent");
+    content.classList.toggle("hidden");
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const email = localStorage.getItem("userEmail");
+    const panel = document.getElementById("adminDashboardPanel");
+
+    if (email === "guhandental@gmail.com") {
+      panel.classList.remove("hidden");
+    }
+  });
 
   function logout() {
     localStorage.removeItem("userEmail");
