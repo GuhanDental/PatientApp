@@ -99,8 +99,9 @@
 
     function updateChart(data) {
       const ctx = document.getElementById("dashboardChart").getContext("2d");
-      if (window.dashboardChart) window.dashboardChart.destroy();
-
+     if (window.dashboardChart instanceof Chart) {
+  window.dashboardChart.destroy();
+}
       window.dashboardChart = new Chart(ctx, {
         type: 'bar',
         data: {
