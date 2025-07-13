@@ -87,32 +87,33 @@
     const scriptUrl = "/.netlify/functions/submit-patient";
     const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}`;
     const res = await fetch(url);
-const raw = await res.text();
-console.log("Response raw:", raw);
+    const text = await res.text();
+    console.log("Raw response:", text);
 
-let data = typeof raw === "string" ? JSON.parse(raw) : raw;
-if (typeof data.body === "string") {
-  data = JSON.parse(data.body);
-}
+    const parsed = JSON.parse(text);
+    console.log("Parsed dashboard data:", parsed);
 
-console.log("Parsed data:", data);
+    // Check if data is valid
+    if (parsed.error) {
+      alert("Error fetching dashboard: " + parsed.error);
+      spinner.classList.add("hidden");
+      return;
+    }
 
+    document.getElementById("totalPatients").textContent = parsed.totalPatients;
+    document.getElementById("newPatientsToday").textContent = parsed.newPatientsToday;
+    document.getElementById("totalRevenue").textContent = "₹ " + parsed.totalRevenue;
+    document.getElementById("pendingPayments").textContent = "₹ " + parsed.pendingPayments;
 
-    console.log("Final parsed data:", data);
-
-    document.getElementById("totalPatients").textContent = data.totalPatients;
-    document.getElementById("newPatientsToday").textContent = data.newPatientsToday;
-    document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
-    document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
-
-    updateChart(data);
+    updateChart(parsed);
   } catch (err) {
-    console.error("Dashboard load error:", err);
-    alert("Error loading dashboard data.");
+    console.error("Failed to fetch dashboard data:", err);
+    alert("Something went wrong fetching dashboard data.");
   } finally {
     spinner.classList.add("hidden");
   }
 }
+
 
 
     function updateChart(data) {
