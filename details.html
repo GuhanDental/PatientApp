@@ -68,14 +68,20 @@
   <div class="logo">
     <img src="Guhan-dental-clinic-logo.png" alt="Clinic Logo" width="120">
   </div>
-<div id="adminDashboardPanel" class="hidden mb-6">
-  <button onclick="toggleDashboardPanel()" class="bg-blue-600 text-white px-4 py-2 rounded mb-2">
-    📊 Toggle Dashboard
-  </button>
-  <div id="dashboardContent" class="hidden border rounded-lg shadow p-4 bg-white">
-    <iframe src="dashboard.html" class="w-full h-[600px] rounded" frameborder="0"></iframe>
-  </div>
+<div id="adminSidebar" class="hidden fixed top-0 left-0 h-full bg-blue-800 text-white w-60 shadow-lg z-50 transition-transform transform -translate-x-full">
+  <div class="p-4 font-bold text-lg border-b border-blue-500">Admin Panel</div>
+  <ul class="p-4 space-y-3">
+    <li>
+      <a href="dashboard.html" target="_blank" class="block hover:bg-blue-700 rounded px-3 py-2">📊 Dashboard</a>
+    </li>
+    <!-- You can add more links here -->
+  </ul>
 </div>
+
+<!-- Toggle Button -->
+<button id="adminToggleBtn" class="hidden fixed top-4 left-4 bg-blue-600 text-white px-3 py-2 rounded shadow z-50">
+  ☰ Menu
+</button>
   <div class="form-container">
     <h2>Patient Details</h2>
     <form id="detailsForm">
@@ -249,17 +255,19 @@
       });
     }
 
-    function toggleDashboardPanel() {
-    const content = document.getElementById("dashboardContent");
-    content.classList.toggle("hidden");
-  }
-
+   
   window.addEventListener("DOMContentLoaded", () => {
     const email = localStorage.getItem("userEmail");
-    const panel = document.getElementById("adminDashboardPanel");
+    const sidebar = document.getElementById("adminSidebar");
+    const toggleBtn = document.getElementById("adminToggleBtn");
 
     if (email === "guhandental@gmail.com") {
-      panel.classList.remove("hidden");
+      sidebar.classList.remove("hidden");
+      toggleBtn.classList.remove("hidden");
+
+      toggleBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("-translate-x-full");
+      });
     }
   });
 
