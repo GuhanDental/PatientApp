@@ -44,11 +44,22 @@
   </style>
   <script>
     function handleCredentialResponse(response) {
-      const data = parseJwt(response.credential);
-      const email = data.email;
-      localStorage.setItem("userEmail", email);
-      window.location.href = "index.html";
-    }
+  const data = parseJwt(response.credential);
+  const email = data.email;
+
+  localStorage.setItem("userEmail", email);
+
+  if (email === "guhandental@gmail.com") {
+    localStorage.setItem("role", "admin");
+  } else if (email === "guhandentalassistant@gmail.com") {
+    localStorage.setItem("role", "assistant");
+  } else {
+    alert("Unauthorized access.");
+    return;
+  }
+
+  window.location.href = "index.html";
+}
 
     function parseJwt(token) {
       const base64Url = token.split('.')[1];
