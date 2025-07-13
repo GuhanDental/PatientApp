@@ -10,11 +10,15 @@
 
   <!-- Header -->
   <div class="bg-white shadow p-6 flex justify-between items-center">
-    <h1 class="text-3xl font-bold text-blue-700 flex items-center gap-3">
-      🦷 Guhan Dental <span class="text-sm text-blue-400 font-light hidden sm:inline">Dashboard</span>
-    </h1>
-    <span class="text-sm text-gray-500">Admin Access</span>
+  <h1 class="text-3xl font-bold text-blue-700 flex items-center gap-3">
+    🦷 Guhan Dental <span class="text-sm text-blue-400 font-light hidden sm:inline">Dashboard</span>
+  </h1>
+  <div class="flex items-center gap-4">
+    <span id="userEmail" class="text-sm text-gray-600"></span>
+    <button onclick="logout()" class="text-sm text-red-500 underline">Logout</button>
   </div>
+</div>
+
 
   <!-- Spinner -->
   <div id="spinner" class="fixed inset-0 bg-white bg-opacity-75 flex justify-center items-center hidden z-50">
@@ -140,19 +144,27 @@
       });
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-      const today = new Date();
-      const lastWeek = new Date();
-      lastWeek.setDate(today.getDate() - 6);
+   function logout() {
+  localStorage.clear();
+  window.location.href = "login.html"; // Update if your login path differs
+}
 
-      const todayStr = today.toISOString().split("T")[0];
-      const weekAgoStr = lastWeek.toISOString().split("T")[0];
+window.addEventListener("DOMContentLoaded", () => {
+  const email = localStorage.getItem("userEmail") || "";
+  document.getElementById("userEmail").textContent = email;
 
-      document.getElementById("fromDate").value = weekAgoStr;
-      document.getElementById("toDate").value = todayStr;
+  const today = new Date();
+  const lastWeek = new Date();
+  lastWeek.setDate(today.getDate() - 6);
 
-      fetchDashboard();
-    });
+  const todayStr = today.toISOString().split("T")[0];
+  const weekAgoStr = lastWeek.toISOString().split("T")[0];
+
+  document.getElementById("fromDate").value = weekAgoStr;
+  document.getElementById("toDate").value = todayStr;
+
+  fetchDashboard();
+});
   </script>
 </body>
 </html>
