@@ -65,25 +65,39 @@
 
   <!-- JS -->
   <script>
-    async function fetchDashboard() {
-      const from = document.getElementById("fromDate").value;
-      const to = document.getElementById("toDate").value;
+  async function fetchDashboard() {
+    const from = document.getElementById("fromDate").value;
+    const to = document.getElementById("toDate").value;
 
-      if (!from || !to) {
-        alert("Please select both From and To dates.");
-        return;
-      }
-
-      const scriptUrl = "/.netlify/functions/submit-patient";
-      const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}`;
-      const res = await fetch(url);
-      const data = await res.json();
-
-      document.getElementById("totalPatients").textContent = data.totalPatients;
-      document.getElementById("newPatientsToday").textContent = data.newToday;
-      document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
-      document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
+    if (!from || !to) {
+      alert("Please select both From and To dates.");
+      return;
     }
-  </script>
+
+    const scriptUrl = "/.netlify/functions/submit-patient";
+    const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    document.getElementById("totalPatients").textContent = data.totalPatients;
+    document.getElementById("newPatientsToday").textContent = data.newToday;
+    document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
+    document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
+  }
+
+  // ✅ Load default values on page load
+  window.addEventListener("DOMContentLoaded", () => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const todayStr = today.toISOString().split("T")[0];
+    const firstDayStr = firstDay.toISOString().split("T")[0];
+
+    document.getElementById("fromDate").value = firstDayStr;
+    document.getElementById("toDate").value = todayStr;
+
+    fetchDashboard(); // auto-trigger
+  });
+</script>
+
 </body>
 </html>
