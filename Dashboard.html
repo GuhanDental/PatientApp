@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Guhan Dental Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-blue-50 min-h-screen font-sans text-gray-800">
 
@@ -15,9 +16,14 @@
     <span class="text-sm text-gray-500">Admin Access</span>
   </div>
 
+  <!-- Spinner -->
+  <div id="spinner" class="fixed inset-0 bg-white bg-opacity-75 flex justify-center items-center hidden z-50">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600"></div>
+  </div>
+
   <!-- Content -->
   <div class="max-w-7xl mx-auto py-8 px-4">
-    
+
     <!-- Filter -->
     <div class="flex flex-col sm:flex-row items-center gap-4 justify-center mb-8">
       <div>
@@ -34,70 +40,105 @@
     </div>
 
     <!-- Metrics -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
       <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
         <div class="text-blue-600 text-xl mb-2">👥 Total Patients</div>
         <div class="text-3xl font-bold" id="totalPatients">--</div>
       </div>
-
       <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
         <div class="text-green-600 text-xl mb-2">🆕 New Today</div>
         <div class="text-3xl font-bold" id="newPatientsToday">--</div>
       </div>
-
       <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
         <div class="text-purple-600 text-xl mb-2">💰 Revenue</div>
         <div class="text-3xl font-bold" id="totalRevenue">--</div>
       </div>
-
       <div class="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
         <div class="text-red-600 text-xl mb-2">⏳ Pending</div>
         <div class="text-3xl font-bold" id="pendingPayments">--</div>
       </div>
     </div>
 
-    <!-- Footer Info (optional) -->
+    <!-- Chart -->
+    <div class="bg-white p-5 rounded-2xl shadow">
+      <canvas id="dashboardChart"></canvas>
+    </div>
+
     <div class="text-xs text-center text-gray-400 mt-10">
       Powered by Guhan Dental System • Built for Admin Use Only
     </div>
-
   </div>
 
-  <!-- JS -->
   <script>
-  async function fetchDashboard() {
-    const from = document.getElementById("fromDate").value;
-    const to = document.getElementById("toDate").value;
+    async function fetchDashboard() {
+      const spinner = document.getElementById("spinner");
+      spinner.classList.remove("hidden");
 
-    if (!from || !to) {
-      alert("Please select both From and To dates.");
-      return;
+      const from = document.getElementById("fromDate").value;
+      const to = document.getElementById("toDate").value;
+
+      if (!from || !to) {
+        alert("Please select both From and To dates.");
+        spinner.classList.add("hidden");
+        return;
+      }
+
+      const scriptUrl = "/.netlify/functions/submit-patient";
+      const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      document.getElementById("totalPatients").textContent = data.totalPatients;
+      document.getElementById("newPatientsToday").textContent = data.newToday;
+      document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
+      document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
+
+      updateChart(data);
+      spinner.classList.add("hidden");
     }
 
-    const scriptUrl = "/.netlify/functions/submit-patient";
-    const url = `${scriptUrl}?action=getDashboardData&from=${from}&to=${to}`;
-    const res = await fetch(url);
-    const data = await res.json();
+    function updateChart(data) {
+      const ctx = document.getElementById("dashboardChart").getContext("2d");
+      if (window.dashboardChart) window.dashboardChart.destroy();
 
-    document.getElementById("totalPatients").textContent = data.totalPatients;
-    document.getElementById("newPatientsToday").textContent = data.newToday;
-    document.getElementById("totalRevenue").textContent = "₹ " + data.totalRevenue;
-    document.getElementById("pendingPayments").textContent = "₹ " + data.pendingPayments;
-  }
+      window.dashboardChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Total Patients', 'New Today', 'Revenue', 'Pending'],
+          datasets: [{
+            label: 'Overview',
+            data: [data.totalPatients, data.newToday, data.totalRevenue, data.pendingPayments],
+            backgroundColor: ['#3b82f6', '#22c55e', '#8b5cf6', '#ef4444']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ctx.raw.toLocaleString() } }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
 
-  // ✅ Load default values on page load
-  window.addEventListener("DOMContentLoaded", () => {
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const todayStr = today.toISOString().split("T")[0];
-    const firstDayStr = firstDay.toISOString().split("T")[0];
+    window.addEventListener("DOMContentLoaded", () => {
+      const today = new Date();
+      const lastWeek = new Date();
+      lastWeek.setDate(today.getDate() - 6);
 
-    document.getElementById("fromDate").value = firstDayStr;
-    document.getElementById("toDate").value = todayStr;
+      const todayStr = today.toISOString().split("T")[0];
+      const weekAgoStr = lastWeek.toISOString().split("T")[0];
 
-    fetchDashboard(); // auto-trigger
-  });
-</script>
+      document.getElementById("fromDate").value = weekAgoStr;
+      document.getElementById("toDate").value = todayStr;
 
+      fetchDashboard();
+    });
+  </script>
 </body>
 </html>
