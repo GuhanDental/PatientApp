@@ -56,15 +56,13 @@
 </head>
 <body>
   <div style="text-align: right; margin-bottom: 10px;">
+     <span id="userEmail" class="text-sm text-gray-600"></span>
   <button onclick="logout()" style="padding: 6px 12px;">Logout</button>
 </div>
   <div class="logo">
     <img src="Guhan-dental-clinic-logo.png" alt="Clinic Logo" width="120">
   </div>
-  <div class="flex items-center gap-4">
-    <span id="userEmail" class="text-sm text-gray-600"></span>
-    <button onclick="logout()" class="text-sm text-red-500 underline">Logout</button>
-  </div>
+
   <div class="form-container">
     <form id="patientForm">
       <input type="hidden" name="patientId" id="patientId">
