@@ -62,6 +62,7 @@
 </head>
 <body>
   <div style="text-align: right; margin-bottom: 10px;">
+     <span id="userEmail" class="text-sm text-gray-600"></span>
   <button onclick="logout()" style="padding: 6px 12px;">Logout</button>
 </div>
   <div class="logo">
@@ -246,6 +247,15 @@
     localStorage.removeItem("userEmail");
     window.location.href = "login.html";
   }
+    window.addEventListener("DOMContentLoaded", () => {
+    const email = localStorage.getItem("userEmail") || "";
+    document.getElementById("userEmail").textContent = email;
+
+    // Optional: redirect if not logged in
+    if (!email) {
+      window.location.href = "login.html";
+    }
+  });
 
     localStorage.setItem("role", "admin");
   </script>
