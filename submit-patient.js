@@ -1,5 +1,5 @@
 export async function handler(event) {
-  const googleScriptURL = "https://script.google.com/macros/s/AKfycbzObyeuU4eQuPbq0GfoT6sn08U_HHsuC3LbyIdM4yDK6DFzRNIxvdb3tv_tfjKaHWwaAQ/exec";
+  const googleScriptURL = "https://script.google.com/macros/s/AKfycbxnZ-paCJddUz90Nes4lHKag47_pkqrsjcgY3U45adzwx2hMqCg39fs8LIWBOGHp0KZLA/exec";
 
   if (event.httpMethod === "OPTIONS") {
     return {
@@ -15,13 +15,24 @@ export async function handler(event) {
 
   if (event.httpMethod === "POST") {
     try {
-      const response = await fetch(googleScriptURL, {
+      const body = JSON.parse(event.body);
+
+      // 🔹 Decide which module this request belongs to
+      let endpoint = googleScriptURL;
+      if (body.module === "billing") {
+        endpoint = googleScriptURL + "?action=billing"; // billing module
+      } else {
+        endpoint = googleScriptURL + "?action=patient"; // default: patient module
+      }
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: event.body,
       });
+
       const data = await response.json();
       return {
         statusCode: 200,
@@ -72,4 +83,3 @@ export async function handler(event) {
     body: JSON.stringify({ error: "Method Not Allowed" }),
   };
 }
-
