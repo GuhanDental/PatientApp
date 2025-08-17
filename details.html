@@ -128,6 +128,7 @@
 </div>
 
 <!-- Tab 1: Patient Details -->
+	<div id="patientDetails" class="tab-content active">
 <div style="text-align: right; margin-bottom: 10px;">
      <span id="userEmail" class="text-sm text-gray-600"></span>
   <button onclick="logout()" style="padding: 6px 12px;">Logout</button>
@@ -157,6 +158,7 @@
   <div class="spinner" id="spinner">
     <img src="tooth-spinner.png" alt="Loading..." />
   </div>
+</div>
 
 <!-- Tab 2: Treatment Plan -->
 <div id="treatmentPlan" class="tab-content">
@@ -313,6 +315,27 @@
         }
       });
     }
+
+
+	// === Tab switching logic ===
+  function openTab(evt, tabName) {
+    // Hide all tab contents
+    document.querySelectorAll(".tab-content").forEach(tab => {
+      tab.classList.remove("active");
+    });
+
+    // Remove 'active' class from all buttons
+    document.querySelectorAll(".tab-button").forEach(btn => {
+      btn.classList.remove("active");
+    });
+
+    // Show the selected tab
+    document.getElementById(tabName).classList.add("active");
+
+    // Highlight the clicked button
+    evt.currentTarget.classList.add("active");
+  }
+	
   function logout() {
     localStorage.removeItem("userEmail");
     window.location.href = "login.html";
@@ -332,4 +355,5 @@
 
 </body>
 </html>
+
 
