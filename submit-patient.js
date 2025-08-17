@@ -1,5 +1,5 @@
 export async function handler(event) {
-  const googleScriptURL = "https://script.google.com/macros/s/AKfycbx9hvPjF3nGRDBD9w_xeUqP29mpCA8t2vZeDX06ikX8eSJoKKXR_GU3LhKzgnOVaAkLOA/exec";
+  const googleScriptURL = "https://script.google.com/macros/s/AKfycbzObyeuU4eQuPbq0GfoT6sn08U_HHsuC3LbyIdM4yDK6DFzRNIxvdb3tv_tfjKaHWwaAQ/exec";
 
   if (event.httpMethod === "OPTIONS") {
     return {
@@ -72,3 +72,4 @@ export async function handler(event) {
     body: JSON.stringify({ error: "Method Not Allowed" }),
   };
 }
+
