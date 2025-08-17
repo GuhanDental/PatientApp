@@ -25,13 +25,10 @@ export async function handler(event) {
         endpoint = googleScriptURL + "?action=patient"; // default: patient module
       }
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: event.body,
-      });
+      const response = await fetch("/.netlify/functions/submit-patient", {
+  method: "POST",
+  body: JSON.stringify(updatedData)
+});
 
       const data = await response.json();
       return {
@@ -83,3 +80,4 @@ export async function handler(event) {
     body: JSON.stringify({ error: "Method Not Allowed" }),
   };
 }
+
