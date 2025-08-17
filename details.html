@@ -244,8 +244,6 @@
 
 <script>
     const scriptUrl = "/.netlify/functions/submit-patient";
- const billingUrl = "/.netlify/functions/submit-billing"; // backend for billing
-	
     const spinner = document.getElementById("spinner");
     const table = document.getElementById("detailsTable");
     const form = document.getElementById("detailsForm");
@@ -455,7 +453,7 @@
     // Load billing rows for this patient
     function loadBillingRecords() {
       if (!patientId) return;
-      fetch(`${billingUrl}?action=getBilling&patientId=${encodeURIComponent(patientId)}`)
+      fetch(`${scriptUrl}?action=getBilling&patientId=${encodeURIComponent(patientId)}`)
         .then(res => res.json())
         .then(rows => {
           const tbody = document.querySelector("#billingTable tbody");
@@ -491,7 +489,7 @@
         e.preventDefault();
         calcBillingTotals(); // ensure latest totals
         const payload = Object.fromEntries(new FormData(billingForm).entries());
-        fetch(billingUrl, {
+        fetch(scriptUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -521,6 +519,7 @@
 
 </body>
 </html>
+
 
 
 
