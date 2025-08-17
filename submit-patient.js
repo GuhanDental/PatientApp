@@ -1,6 +1,7 @@
 export async function handler(event) {
   const googleScriptURL = "https://script.google.com/macros/s/AKfycbxnZ-paCJddUz90Nes4lHKag47_pkqrsjcgY3U45adzwx2hMqCg39fs8LIWBOGHp0KZLA/exec";
 
+  // ✅ Handle CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
@@ -13,24 +14,28 @@ export async function handler(event) {
     };
   }
 
+  // ✅ Handle POST requests (patient / billing modules)
   if (event.httpMethod === "POST") {
     try {
       const body = JSON.parse(event.body);
 
-      // 🔹 Decide which module this request belongs to
+      // Decide module
       let endpoint = googleScriptURL;
       if (body.module === "billing") {
-        endpoint = googleScriptURL + "?action=billing"; // billing module
+        endpoint += "?action=billing";
       } else {
-        endpoint = googleScriptURL + "?action=patient"; // default: patient module
+        endpoint += "?action=patient";
       }
 
-      const response = await fetch("/.netlify/functions/submit-patient", {
-  method: "POST",
-  body: JSON.stringify(updatedData)
-});
+      // Forward POST to Google Apps Script
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
       const data = await response.json();
+
       return {
         statusCode: 200,
         headers: {
@@ -49,11 +54,13 @@ export async function handler(event) {
     }
   }
 
+  // ✅ Handle GET requests (fetch patient/billing data)
   if (event.httpMethod === "GET") {
     try {
       const queryParams = new URLSearchParams(event.queryStringParameters).toString();
       const response = await fetch(`${googleScriptURL}?${queryParams}`);
       const data = await response.json();
+
       return {
         statusCode: 200,
         headers: {
@@ -72,6 +79,7 @@ export async function handler(event) {
     }
   }
 
+  // ✅ Invalid method fallback
   return {
     statusCode: 405,
     headers: {
@@ -80,4 +88,3 @@ export async function handler(event) {
     body: JSON.stringify({ error: "Method Not Allowed" }),
   };
 }
-
