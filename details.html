@@ -117,6 +117,19 @@
       margin: 0 10px;
       padding: 6px 16px;
     }
+/* Modal styles */
+    .button-row {
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 10000; }
+    .modal-content { background: white; padding: 20px; width: 500px; border-radius: 8px; text-align: left; }
+    .modal-content h3 { margin-top: 0; }
+      margin-top: 20px;
+    .modal-content label { display: block; margin: 8px 0 4px; }
+      display: none;
+    .modal-content input, .modal-content textarea { width: 100%; padding: 6px; margin-bottom: 10px; }
+    .modal-buttons { text-align: right; }
+      text-align: center;
+    .modal-buttons button { margin-left: 10px; padding: 8px 16px; }
+	  
   </style>
 </head>
 <body>
@@ -125,6 +138,7 @@
 <div class="tabs">
   <button class="tab-button active" onclick="openTab(event, 'patientDetails')">Patient Details</button>
   <button class="tab-button" onclick="openTab(event, 'treatmentPlan')">Treatment Plan</button>
+ <button class="tab-button" onclick="openTab(event, 'billingInfo')">Billing Information</button>
 </div>
 
 <!-- Tab 1: Patient Details -->
@@ -165,9 +179,73 @@
   <h3>Treatment Plan</h3>
   <p>Placeholder for teeth diagram and treatment options.</p>
 </div>
+	<!-- Tab 3: Billing Information -->
+<script>
+<div id="billingInfo" class="tab-content">
+    const scriptUrl = "/.netlify/functions/submit-patient";
+  <h3>Billing Information</h3>
+    const spinner = document.getElementById("spinner");
+  <button onclick="openBillingModal()">+ Add Billing Record</button>
+    const table = document.getElementById("detailsTable");
+  <table id="billingTable">
+    const form = document.getElementById("detailsForm");
+    <thead>
+    const actionButtons = document.getElementById("actionButtons");
+      <tr>
+        <th>Treatment Description</th>
+        <th>No. of Units</th>
+        <th>Unit Cost</th>
+        <th>Total Cost</th>
+        <th>Treatment Date</th>
+        <th>Amount Paid</th>
+        <th>Payment Date</th>
+        <th>Remaining Balance</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<!-- Billing Modal -->
+    const patientId = new URLSearchParams(window.location.search).get("patientId");
+<div id="billingModal" class="modal">
+    const email = localStorage.getItem("userEmail");
+  <div class="modal-content">
+    const isAdminUser = email === "guhandental@gmail.com";
+    <h3>Add Billing Record</h3>
+    const isAssistantUser = email === "guhandentalassitant@gmail.com";
+    <form id="billingForm">
+      <input type="hidden" name="patientId" id="billingPatientId">
+      <label>Treatment Description</label>
+      <input type="text" name="treatmentDescription" required>
+      <label>No. of Units</label>
+      <input type="number" name="units" id="units" required>
+      <label>Unit Cost</label>
+      <input type="number" name="unitCost" id="unitCost" required>
+      <label>Total Cost</label>
+      <input type="number" name="totalCost" id="totalCost" readonly>
+      <label>Treatment Date</label>
+      <input type="date" name="treatmentDate" required>
+      <label>Amount Paid</label>
+      <input type="number" name="amountPaid" id="amountPaid" required>
+      <label>Payment Date</label>
+      <input type="date" name="paymentDate" required>
+      <label>Remaining Balance</label>
+      <input type="number" name="remainingBalance" id="remainingBalance" readonly>
+      <label>Notes</label>
+      <textarea name="notes"></textarea>
+      <div class="modal-buttons">
+        <button type="button" onclick="closeBillingModal()">Cancel</button>
+        <button type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script>
     const scriptUrl = "/.netlify/functions/submit-patient";
+ const billingUrl = "/.netlify/functions/submit-billing"; // backend for billing
+	
     const spinner = document.getElementById("spinner");
     const table = document.getElementById("detailsTable");
     const form = document.getElementById("detailsForm");
@@ -193,8 +271,10 @@
 }
 
     
+    
     window.onload = () => {
       if (!patientId) return alert("No patient ID provided.");
+		document.getElementById("billingPatientId").value = patientId;
 
       spinner.style.display = 'flex';
       fetch(`${scriptUrl}?action=getDetails&patientId=${encodeURIComponent(patientId)}&userEmail=${encodeURIComponent(email)}`)
@@ -351,9 +431,96 @@
   });
 
     localStorage.setItem("role", "admin");
+	 /* ======= Added: Billing logic (append only) ======= */
+   
+    function openBillingModal() {
+      document.getElementById("billingModal").style.display = "flex";
+    }
+    function closeBillingModal() {
+      document.getElementById("billingModal").style.display = "none";
+    }
+    function calcBillingTotals() {
+      const units = parseFloat(document.getElementById("units").value) || 0;
+      const unitCost = parseFloat(document.getElementById("unitCost").value) || 0;
+      const amountPaid = parseFloat(document.getElementById("amountPaid").value) || 0;
+      const total = units * unitCost;
+      document.getElementById("totalCost").value = total;
+      document.getElementById("remainingBalance").value = total - amountPaid;
+    }
+    // attach listeners safely (elements exist since script is after HTML)
+    ["units","unitCost","amountPaid"].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", calcBillingTotals);
+    });
+    // Load billing rows for this patient
+    function loadBillingRecords() {
+      if (!patientId) return;
+      fetch(`${billingUrl}?action=getBilling&patientId=${encodeURIComponent(patientId)}`)
+        .then(res => res.json())
+        .then(rows => {
+          const tbody = document.querySelector("#billingTable tbody");
+          if (!tbody) return;
+          tbody.innerHTML = "";
+          if (!Array.isArray(rows)) return;
+          rows.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.patientId ?? ""}</td>
+              <td>${r.treatmentDescription ?? ""}</td>
+              <td>${r.units ?? ""}</td>
+              <td>${r.unitCost ?? ""}</td>
+              <td>${r.totalCost ?? ""}</td>
+              <td>${r.treatmentDate ?? ""}</td>
+              <td>${r.amountPaid ?? ""}</td>
+              <td>${r.paymentDate ?? ""}</td>
+              <td>${r.remainingBalance ?? ""}</td>
+              <td>${r.notes ?? ""}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(() => {
+          // fail silently to avoid impacting existing flows
+          console.warn("Could not load billing records.");
+        });
+    }
+    // Save billing record
+    const billingForm = document.getElementById("billingForm");
+    if (billingForm) {
+      billingForm.addEventListener("submit", function(e){
+        e.preventDefault();
+        calcBillingTotals(); // ensure latest totals
+        const payload = Object.fromEntries(new FormData(billingForm).entries());
+        fetch(billingUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === "Success") {
+            alert("✅ Billing record saved");
+            closeBillingModal();
+            loadBillingRecords();
+            billingForm.reset();
+            document.getElementById("billingPatientId").value = patientId || "";
+          } else {
+            alert("❌ Error: " + (res.message || "Failed to save"));
+          }
+        })
+        .catch(() => alert("❌ Failed to save billing record"));
+      });
+    }
+    // After page fully loads, set patientId into modal and fetch billing
+    window.addEventListener("load", () => {
+      const pidField = document.getElementById("billingPatientId");
+      if (pidField) pidField.value = patientId || "";
+      loadBillingRecords();
+    });
   </script>
 
 </body>
 </html>
+
 
 
