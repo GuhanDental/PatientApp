@@ -354,33 +354,29 @@
       
     };
 
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      spinner.style.display = "flex";
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+  const updatedData = {};
+  const inputs = document.querySelectorAll("#patientForm input, #patientForm textarea");
+  inputs.forEach(input => {
+    updatedData[input.id] = input.type === "checkbox" ? input.checked : input.value;
+  });
 
-      const updatedData = {};
-      [...form.elements].forEach(el => {
-        if (el.name) {
-          updatedData[el.name] = el.type === "checkbox" ? el.checked : el.value.trim();
-        }
-      });
+  updatedData.patientId = patientId; // Keep patient ID
+  updatedData.module = "patient";    // ✅ Added line
 
-      fetch(scriptUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedData)
-      })
-        .then(res => res.json())
-        .then(res => {
-          if (res.status === "Success") {
-            alert(`✅ Record ${res.operation === "updated" ? "updated" : "inserted"}!\nPatient ID: ${res.patientId}`);
-          } else {
-            alert("❌ Error: " + res.message);
-          }
-        })
-        .catch(() => alert("❌ Failed to update patient record."))
-        .finally(() => spinner.style.display = "none");
+  try {
+    const response = await fetch("/.netlify/functions/submit-patient", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }, // ✅ Added headers
+      body: JSON.stringify(updatedData)
     });
+
+    const result = await response.json();
+    alert(result.message || "Data saved successfully!");
+  } catch (error) {
+    alert("Error saving data: " + error.message);
+  }
+});
 
     function resetEditableFields() {
       [...form.elements].forEach(el => {
@@ -519,6 +515,7 @@
 
 </body>
 </html>
+
 
 
 
